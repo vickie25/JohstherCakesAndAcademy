@@ -44,43 +44,43 @@ export function App() {
     <div className="min-h-screen">
       {/* Navigation */}
       <header
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        className={`fixed top-4 left-4 right-4 z-50 transition-all duration-500 max-w-7xl mx-auto ${
           isScrolled
-            ? 'bg-background/80 backdrop-blur-md border-b border-border shadow-sm'
-            : 'bg-transparent'
+            ? 'glass-card rounded-full shadow-lg border-white/20 px-2 py-1'
+            : 'bg-transparent px-2 py-2'
         }`}
       >
         <div className="container mx-auto px-6">
-          <div className="flex h-16 items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Cake className="size-8 text-primary" />
-              <span className="text-xl font-bold" style={{ fontFamily: 'var(--font-display)' }}>
-                CakeCraft
+          <div className="flex h-14 items-center justify-between">
+            <div className="flex items-center gap-2 cursor-pointer transition-transform hover:scale-105">
+              <div className="size-10 rounded-full bg-primary flex items-center justify-center shadow-lg">
+                <Cake className="size-6 text-white" />
+              </div>
+              <span className="text-xl font-bold tracking-tight" style={{ fontFamily: 'var(--font-display)', color: 'var(--text-dark)' }}>
+                Johsther<span className="text-primary font-medium italic">Craft</span>
               </span>
             </div>
 
-            <nav className="hidden md:flex items-center gap-8">
-              <a href="#services" className="text-sm font-medium hover:text-primary transition-colors">
-                Services
-              </a>
-              <a href="#gallery" className="text-sm font-medium hover:text-primary transition-colors">
-                Gallery
-              </a>
-              <a href="#pricing" className="text-sm font-medium hover:text-primary transition-colors">
-                Pricing
-              </a>
-              <a href="#reviews" className="text-sm font-medium hover:text-primary transition-colors">
-                Reviews
-              </a>
+            <nav className="hidden md:flex items-center gap-10">
+              {['Services', 'Academy', 'Gallery', 'Reviews'].map((item) => (
+                <a
+                  key={item}
+                  href={`#${item.toLowerCase()}`}
+                  className="text-sm font-semibold text-text-dark/80 hover:text-primary transition-all duration-300 relative group"
+                >
+                  {item}
+                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full" />
+                </a>
+              ))}
             </nav>
 
-            <div className="flex items-center gap-3">
-              <Button variant="ghost" size="sm">
+            <div className="flex items-center gap-4">
+              <Button variant="ghost" size="sm" className="font-semibold hover:bg-primary/5">
                 Sign In
               </Button>
               <Button
                 size="sm"
-                className="rounded-full"
+                className="rounded-full px-6 gold-glow transition-all duration-300 hover:scale-105"
                 style={{ background: 'var(--primary)', color: 'white' }}
               >
                 Order Now
@@ -91,111 +91,163 @@ export function App() {
       </header>
 
       {/* Hero Section */}
-      <section className="pt-32 pb-20 relative overflow-hidden">
+      <section className="pt-40 pb-24 relative overflow-hidden bg-bg-cream">
         <div
-          className="absolute inset-0 opacity-50"
+          className="absolute top-0 right-0 w-1/2 h-full opacity-30 pointer-events-none"
           style={{
-            background: 'radial-gradient(circle at 50% 50%, rgba(200, 98, 42, 0.1) 0%, transparent 70%)',
+            background: 'radial-gradient(circle at 70% 30%, var(--gold-light) 0%, transparent 70%)',
           }}
         />
         <div className="container mx-auto px-6 relative">
-          <div className="grid md:grid-cols-[1.2fr_1fr] gap-12 items-center">
-            <div className="space-y-6 reveal">
-              <Badge
-                className="rounded-full px-4 py-1.5 text-sm font-semibold"
-                style={{ background: 'var(--badge-bg)', color: 'var(--primary)' }}
-              >
-                <Sparkles className="size-3.5 mr-1.5" />
-                Best Bakery 2024
-              </Badge>
+          <div className="hero-split">
+            <div className="space-y-8 reveal">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card border-primary/10 shadow-sm">
+                <Sparkles className="size-4 text-gold" />
+                <span className="text-xs font-bold tracking-widest uppercase text-primary">Prestige Bakery & Academy</span>
+              </div>
 
               <h1
-                className="text-5xl md:text-6xl font-bold leading-tight"
-                style={{ fontFamily: 'var(--font-display)' }}
+                className="text-6xl md:text-8xl font-bold leading-[1.1]"
+                style={{ fontFamily: 'var(--font-display)', color: 'var(--text-dark)' }}
               >
-                Bake Joy Into Every{' '}
-                <span
-                  className="text-primary"
-                  style={{ fontFamily: 'var(--font-script)', fontStyle: 'italic' }}
-                >
-                  Celebration
-                </span>
+                Where <span className="text-gradient">Artistry</span> <br />
+                Meets <span className="text-primary italic" style={{ fontFamily: 'var(--font-script)' }}>Flavor</span>
               </h1>
 
-              <p className="text-lg" style={{ color: 'var(--text-muted)' }}>
-                From classic sponges to tall layer masterpieces, we create delicious moments that bring
-                people together and make every occasion unforgettable.
+              <p className="text-xl max-w-xl leading-relaxed text-text-muted">
+                Experience the pinnacle of artisanal baking. From bespoke luxury tiers to professional 
+                certification at our acclaimed Academy, we don't just bake—we create masterpieces.
               </p>
 
-              <div className="flex flex-wrap gap-4">
+              <div className="flex flex-wrap gap-5 pt-4">
                 <Button
                   size="lg"
-                  className="rounded-full px-8 h-12 font-semibold shadow-lg hover:shadow-xl transition-all"
-                  style={{ background: 'var(--primary)', color: 'white', animation: 'pulse-ring 2.2s infinite' }}
+                  className="rounded-full px-10 h-14 font-bold shadow-xl hover:shadow-primary/20 transition-all gold-glow"
+                  style={{ background: 'var(--primary)', color: 'white' }}
                 >
-                  Book a Cake
+                  Book a Masterpiece
                 </Button>
                 <Button
                   size="lg"
                   variant="outline"
-                  className="rounded-full px-8 h-12 font-semibold border-2"
-                  style={{ borderColor: 'var(--text-dark)', color: 'var(--text-dark)' }}
+                  className="rounded-full px-10 h-14 font-bold border-2 border-primary/20 hover:border-primary hover:bg-primary/5 transition-all"
+                  style={{ color: 'var(--text-dark)' }}
                 >
-                  View Gallery
+                  Join the Academy
                 </Button>
               </div>
 
-              <div className="flex items-center gap-8 pt-4">
-                <div className="text-center">
-                  <div className="text-3xl font-bold" style={{ fontFamily: 'var(--font-display)' }}>
-                    5,000+
+              <div className="flex items-center gap-12 pt-8">
+                {[
+                  { label: 'Cakes Delivered', value: '12k+' },
+                  { label: 'Students Certified', value: '850+' },
+                  { label: 'Exquisite Flavors', value: '24' }
+                ].map((stat, i) => (
+                  <div key={i} className="space-y-1">
+                    <div className="text-3xl font-bold text-text-dark" style={{ fontFamily: 'var(--font-display)' }}>{stat.value}</div>
+                    <div className="text-xs font-medium uppercase tracking-wider text-text-muted">{stat.label}</div>
                   </div>
-                  <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                    Cakes Made
+                ))}
+              </div>
+            </div>
+
+            <div className="reveal relative flex justify-center">
+              <div className="relative w-full max-w-[500px]">
+                {/* Decorative blob */}
+                <div className="absolute -inset-4 bg-gradient-to-tr from-gold/20 to-primary/20 blur-3xl rounded-full opacity-60 animate-pulse" />
+                
+                <div className="relative rounded-[2rem] overflow-hidden shadow-2xl border-[12px] border-white transform rotate-3 hover:rotate-0 transition-all duration-700">
+                  <img
+                    src="/hero-cake.png"
+                    alt="Luxury Wedding Cake"
+                    className="w-full h-[600px] object-cover scale-110 hover:scale-100 transition-transform duration-1000"
+                  />
+                </div>
+
+                {/* Floating Elements */}
+                <div className="absolute -top-8 -right-8 glass-card p-6 rounded-2xl shadow-xl floating gold-glow z-10 max-w-[160px]">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="size-8 rounded-full bg-gold/10 flex items-center justify-center">
+                      <Star className="size-4 text-gold fill-gold" />
+                    </div>
+                    <span className="text-xs font-bold text-text-dark">5.0 Rating</span>
+                  </div>
+                  <p className="text-[10px] leading-tight text-text-muted">Trusted by premium event planners globally.</p>
+                </div>
+
+                <div className="absolute -bottom-10 -left-10 glass-card p-5 rounded-2xl shadow-xl floating gold-glow z-10" style={{ animationDelay: '1s' }}>
+                  <div className="flex items-center gap-3">
+                    <div className="size-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                      <CheckCircle2 className="size-6 text-primary" />
+                    </div>
+                    <div>
+                      <div className="text-sm font-bold text-text-dark">Academy Certified</div>
+                      <div className="text-[10px] text-text-muted">Professional Pastry Arts</div>
+                    </div>
                   </div>
                 </div>
-                <Separator orientation="vertical" className="h-12" />
-                <div className="text-center">
-                  <div className="text-3xl font-bold flex items-center gap-1" style={{ fontFamily: 'var(--font-display)' }}>
-                    4.9 <Star className="size-6 fill-[var(--star-gold)] text-[var(--star-gold)]" />
-                  </div>
-                  <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                    Rating
-                  </div>
-                </div>
-                <Separator orientation="vertical" className="h-12" />
-                <div className="text-center">
-                  <div className="text-3xl font-bold" style={{ fontFamily: 'var(--font-display)' }}>
-                    10+
-                  </div>
-                  <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                    Flavors
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Academy Section */}
+      <section id="academy" className="py-24 bg-white overflow-hidden">
+        <div className="container mx-auto px-6">
+          <div className="grid md:grid-cols-2 gap-16 items-center">
+            <div className="reveal order-2 md:order-1">
+              <div className="relative">
+                <div className="absolute -inset-4 bg-primary/5 rounded-[2.5rem] -rotate-3" />
+                <div className="relative rounded-[2rem] overflow-hidden shadow-xl border border-primary/10">
+                  <img
+                    src="/academy-class.png"
+                    alt="Baking Class at Johsther Academy"
+                    className="w-full h-[500px] object-cover hover:scale-105 transition-transform duration-700"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60" />
+                  <div className="absolute bottom-8 left-8 text-white">
+                    <div className="text-2xl font-bold mb-2">Master the Art</div>
+                    <div className="flex items-center gap-2 text-sm opacity-90">
+                      <CheckCircle2 className="size-4 text-gold" />
+                      Internationally Recognized Certification
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="reveal relative">
-              <div
-                className="rounded-3xl overflow-hidden shadow-2xl transform -rotate-2 hover:rotate-0 transition-transform duration-500"
-                style={{ background: 'var(--white)' }}
-              >
-                <img
-                  src="https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&h=700&fit=crop"
-                  alt="Beautiful layered cake"
-                  className="w-full h-[500px] object-cover"
-                />
-                <div className="absolute bottom-6 right-6 bg-white/95 backdrop-blur-sm rounded-2xl p-4 shadow-xl">
-                  <div className="flex items-center gap-2">
-                    {[1, 2, 3, 4, 5].map((i) => (
-                      <Star key={i} className="size-4 fill-[var(--star-gold)] text-[var(--star-gold)]" />
-                    ))}
+            <div className="reveal space-y-8 order-1 md:order-2">
+              <Badge className="rounded-full px-4 py-1.5 text-sm font-semibold bg-primary/10 text-primary border-none">
+                Johsther Academy
+              </Badge>
+              <h2 className="text-4xl md:text-5xl font-bold leading-tight" style={{ fontFamily: 'var(--font-display)', color: 'var(--text-dark)' }}>
+                Elevate Your Passion <br />
+                into a <span className="text-primary italic" style={{ fontFamily: 'var(--font-script)' }}>Profession</span>
+              </h2>
+              <p className="text-lg text-text-muted leading-relaxed">
+                Join our elite pastry programs designed for both aspiring professionals and passionate home bakers. 
+                Learn the secrets of luxury cake design, precision tempering, and artisanal techniques from the masters.
+              </p>
+
+              <div className="grid grid-cols-2 gap-6">
+                {[
+                  { title: 'Diplomas', desc: '6-month comprehensive certification' },
+                  { title: 'Masterclasses', desc: 'Intensive weekend workshops' },
+                  { title: 'Online Portal', desc: 'Learn from anywhere, anytime' },
+                  { title: 'Mentorship', desc: '1-on-1 guidance from top chefs' }
+                ].map((item, i) => (
+                  <div key={i} className="space-y-2">
+                    <div className="font-bold text-text-dark">{item.title}</div>
+                    <div className="text-sm text-text-muted leading-snug">{item.desc}</div>
                   </div>
-                  <div className="text-sm font-semibold mt-1">CakeCraft Bakery</div>
-                  <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                    Trusted by 5,000+ customers
-                  </div>
-                </div>
+                ))}
+              </div>
+
+              <div className="pt-4">
+                <Button className="rounded-full px-8 h-12 font-bold gold-glow" style={{ background: 'var(--primary)', color: 'white' }}>
+                  Explore Courses
+                </Button>
               </div>
             </div>
           </div>

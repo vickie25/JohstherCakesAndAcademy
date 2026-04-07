@@ -25,4 +25,4 @@ dist-ssr
 *node_modules
 *CakeCraft_Website_Project_Report.md
 *CakeCraft_Website_Project_Report.txt
-
+*.agent
