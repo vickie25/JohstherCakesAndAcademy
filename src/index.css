@@ -139,3 +139,37 @@ h1, h2, h3, h4, h5, h6 {
 ::-webkit-scrollbar { width: 8px; }
 ::-webkit-scrollbar-track { background: #FEF3C7; }
 ::-webkit-scrollbar-thumb { background: #F59E0B; border-radius: 4px; }
+
+/* ─── Auth Modal Responsive ─── */
+/* Tighten the modal on very small screens */
+@media (max-width: 480px) {
+  /* Ensure the Dialog overlay covers everything */
+  [data-slot="dialog-overlay"] {
+    background: rgba(0, 0, 0, 0.6) !important;
+  }
+
+  /* Make the card fill more of the viewport width */
+  [data-slot="dialog-content"] {
+    width: calc(100% - 16px) !important;
+    max-width: 100% !important;
+  }
+}
+
+/* ─── Auth Modal inner card mobile tweaks ─── */
+.auth-modal-header {
+  padding: 20px 20px 16px !important;
+}
+
+.auth-modal-body {
+  padding: 18px 18px 22px !important;
+}
+
+.auth-modal-scroll {
+  max-height: 52vh !important;
+}
+
+@media (max-width: 380px) {
+  .auth-modal-scroll {
+    max-height: 48vh !important;
+  }
+}

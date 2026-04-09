@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import AuthModal from './AuthModal';
 
 const navLinks = [
   { label: 'Home',      href: '#home' },
@@ -12,6 +13,13 @@ const navLinks = [
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [authOpen, setAuthOpen] = useState(false);
+  const [authDefaultTab, setAuthDefaultTab] = useState<'login' | 'signup'>('login');
+
+  const openAuth = (tab: 'login' | 'signup') => {
+    setAuthDefaultTab(tab);
+    setAuthOpen(true);
+  };
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -95,63 +103,132 @@ export default function Navbar() {
           ))}
         </ul>
 
-        {/* CTA Button */}
-        <a
-          href="#courses"
-          className="hidden-mobile"
-          style={{
-            fontFamily: "'Baloo 2', cursive",
-            fontWeight: 700,
-            fontSize: '0.9rem',
-            background: 'linear-gradient(135deg,#92400E,#B45309)',
-            color: '#fff',
-            padding: '8px 22px',
-            borderRadius: '999px',
-            textDecoration: 'none',
-            boxShadow: '0 4px 12px rgba(146,64,14,0.3)',
-            transition: 'transform 0.2s, box-shadow 0.2s',
-            cursor: 'pointer',
-          }}
-          onMouseEnter={e => {
-            (e.currentTarget as HTMLAnchorElement).style.transform = 'translateY(-2px)';
-            (e.currentTarget as HTMLAnchorElement).style.boxShadow = '0 8px 20px rgba(146,64,14,0.4)';
-          }}
-          onMouseLeave={e => {
-            (e.currentTarget as HTMLAnchorElement).style.transform = 'translateY(0)';
-            (e.currentTarget as HTMLAnchorElement).style.boxShadow = '0 4px 12px rgba(146,64,14,0.3)';
-          }}
-        >
-          Join Class 🎂
-        </a>
+        {/* CTA + Auth buttons */}
+        <div className="hidden-mobile" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <a
+            href="#courses"
+            style={{
+              fontFamily: "'Baloo 2', cursive",
+              fontWeight: 700,
+              fontSize: '0.9rem',
+              background: 'linear-gradient(135deg,#92400E,#B45309)',
+              color: '#fff',
+              padding: '8px 22px',
+              borderRadius: '999px',
+              textDecoration: 'none',
+              boxShadow: '0 4px 12px rgba(146,64,14,0.3)',
+              transition: 'transform 0.2s, box-shadow 0.2s',
+              cursor: 'pointer',
+            }}
+            onMouseEnter={e => {
+              (e.currentTarget as HTMLAnchorElement).style.transform = 'translateY(-2px)';
+              (e.currentTarget as HTMLAnchorElement).style.boxShadow = '0 8px 20px rgba(146,64,14,0.4)';
+            }}
+            onMouseLeave={e => {
+              (e.currentTarget as HTMLAnchorElement).style.transform = 'translateY(0)';
+              (e.currentTarget as HTMLAnchorElement).style.boxShadow = '0 4px 12px rgba(146,64,14,0.3)';
+            }}
+          >
+            Join Class
+          </a>
 
-        {/* Hamburger */}
-        <button
-          onClick={() => setMenuOpen(!menuOpen)}
-          aria-label="Toggle menu"
-          className="show-mobile"
-          style={{
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            padding: '6px',
-            display: 'none',
-          }}
-        >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#92400E" strokeWidth="2.5" strokeLinecap="round">
-            {menuOpen ? (
-              <>
-                <line x1="18" y1="6" x2="6" y2="18"/>
-                <line x1="6" y1="6" x2="18" y2="18"/>
-              </>
-            ) : (
-              <>
-                <line x1="3" y1="7" x2="21" y2="7"/>
-                <line x1="3" y1="12" x2="21" y2="12"/>
-                <line x1="3" y1="17" x2="21" y2="17"/>
-              </>
-            )}
-          </svg>
-        </button>
+          {/* Auth Icon Button */}
+          <button
+            id="nav-auth-btn"
+            onClick={() => openAuth('login')}
+            aria-label="Sign in or create account"
+            title="Sign in / Sign up"
+            style={{
+              background: '#F59E0B22',
+              border: '1.5px solid #F59E0B66',
+              borderRadius: '50%',
+              width: 38,
+              height: 38,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              color: '#92400E',
+              flexShrink: 0,
+            }}
+            onMouseEnter={e => {
+              (e.currentTarget as HTMLButtonElement).style.background = '#F59E0B';
+              (e.currentTarget as HTMLButtonElement).style.color = '#fff';
+              (e.currentTarget as HTMLButtonElement).style.borderColor = '#F59E0B';
+              (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 4px 12px rgba(245,158,11,0.4)';
+            }}
+            onMouseLeave={e => {
+              (e.currentTarget as HTMLButtonElement).style.background = '#F59E0B22';
+              (e.currentTarget as HTMLButtonElement).style.color = '#92400E';
+              (e.currentTarget as HTMLButtonElement).style.borderColor = '#F59E0B66';
+              (e.currentTarget as HTMLButtonElement).style.boxShadow = 'none';
+            }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
+          </button>
+        </div>
+
+        {/* Mobile: Auth icon + Hamburger side-by-side */}
+        <div className="show-mobile" style={{ display: 'none', alignItems: 'center', gap: 8 }}>
+          {/* Auth icon on mobile */}
+          <button
+            id="nav-auth-btn-mobile"
+            onClick={() => openAuth('login')}
+            aria-label="Sign in or create account"
+            title="Sign in / Sign up"
+            style={{
+              background: '#F59E0B22',
+              border: '1.5px solid #F59E0B66',
+              borderRadius: '50%',
+              width: 36,
+              height: 36,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              color: '#92400E',
+              flexShrink: 0,
+            }}
+          >
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
+          </button>
+
+          {/* Hamburger */}
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            aria-label="Toggle menu"
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              padding: '6px',
+              display: 'flex',
+              alignItems: 'center',
+            }}
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#92400E" strokeWidth="2.5" strokeLinecap="round">
+              {menuOpen ? (
+                <>
+                  <line x1="18" y1="6" x2="6" y2="18"/>
+                  <line x1="6" y1="6" x2="18" y2="18"/>
+                </>
+              ) : (
+                <>
+                  <line x1="3" y1="7" x2="21" y2="7"/>
+                  <line x1="3" y1="12" x2="21" y2="12"/>
+                  <line x1="3" y1="17" x2="21" y2="17"/>
+                </>
+              )}
+            </svg>
+          </button>
+        </div>
       </nav>
 
       {/* Mobile Menu */}
@@ -201,8 +278,45 @@ export default function Navbar() {
               textDecoration: 'none',
             }}
           >
-            Join Class 🎂
+            Join Class
           </a>
+
+          {/* Auth buttons in mobile menu */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 8 }}>
+            <button
+              onClick={() => { setMenuOpen(false); openAuth('login'); }}
+              style={{
+                padding: '10px',
+                border: '1.5px solid #92400E',
+                borderRadius: '12px',
+                background: 'transparent',
+                color: '#92400E',
+                fontFamily: "'Baloo 2', cursive",
+                fontWeight: 700,
+                fontSize: '0.9rem',
+                cursor: 'pointer',
+              }}
+            >
+              Sign In
+            </button>
+            <button
+              onClick={() => { setMenuOpen(false); openAuth('signup'); }}
+              style={{
+                padding: '10px',
+                border: 'none',
+                borderRadius: '12px',
+                background: 'linear-gradient(135deg,#F59E0B,#B45309)',
+                color: '#fff',
+                fontFamily: "'Baloo 2', cursive",
+                fontWeight: 700,
+                fontSize: '0.9rem',
+                cursor: 'pointer',
+                boxShadow: '0 3px 10px rgba(245,158,11,0.35)',
+              }}
+            >
+              Sign Up
+            </button>
+          </div>
         </div>
       )}
 
@@ -212,6 +326,13 @@ export default function Navbar() {
           .show-mobile { display: flex !important; }
         }
       `}</style>
+
+      {/* Auth Modal */}
+      <AuthModal
+        open={authOpen}
+        onClose={() => setAuthOpen(false)}
+        defaultTab={authDefaultTab}
+      />
     </header>
   );
 }
