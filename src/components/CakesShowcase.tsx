@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useCart } from '../context/CartContext';
 
 const categories = ['All', 'Wedding', 'Birthday', 'Custom', 'Academy'];
 
@@ -71,6 +72,7 @@ const tagColors: Record<string, { bg: string; color: string }> = {
 export default function CakesShowcase() {
   const [active, setActive] = useState('All');
   const ref = useRef<HTMLElement>(null);
+  const { items, addToCart, updateQuantity } = useCart();
 
   const filtered = active === 'All' ? cakes : cakes.filter(c => c.category === active);
 
@@ -197,25 +199,46 @@ export default function CakesShowcase() {
                     <span style={{ fontFamily: "'Baloo 2', cursive", fontWeight: 800, color: '#92400E', fontSize: '1rem' }}>
                       {cake.price}
                     </span>
-                    <button
-                      style={{
-                        fontFamily: "'Baloo 2', cursive",
-                        fontWeight: 700,
-                        fontSize: '0.85rem',
-                        background: 'linear-gradient(135deg, #F59E0B, #B45309)',
-                        color: '#fff',
-                        border: 'none',
-                        padding: '8px 18px',
-                        borderRadius: '999px',
-                        cursor: 'pointer',
-                        transition: 'opacity 0.2s',
-                      }}
-                      onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
-                      onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
-                      aria-label={`Order ${cake.name}`}
-                    >
-                      Order Now
-                    </button>
+                    {items.find(i => i.id === cake.id) ? (() => {
+                      const cartItem = items.find(i => i.id === cake.id)!;
+                      return (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#FEF3C7', padding: '4px 8px', borderRadius: '999px', border: '1px solid #F59E0B44' }}>
+                          <button onClick={(e) => { e.stopPropagation(); updateQuantity(cake.id, -1); }} style={{ background: '#F59E0B', border: 'none', color: '#fff', width: 24, height: 24, borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>-</button>
+                          <span style={{ fontFamily: "'Baloo 2', cursive", fontWeight: 700, color: '#92400E', width: '16px', textAlign: 'center', fontSize: '0.9rem' }}>{cartItem.quantity}</span>
+                          <button onClick={(e) => { e.stopPropagation(); updateQuantity(cake.id, 1); }} style={{ background: '#F59E0B', border: 'none', color: '#fff', width: 24, height: 24, borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>+</button>
+                        </div>
+                      );
+                    })() : (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          addToCart({
+                            id: cake.id,
+                            name: cake.name,
+                            priceNum: parseInt(cake.price.replace(/\D/g, ''), 10) || 0,
+                            priceStr: cake.price,
+                            image: cake.image
+                          });
+                        }}
+                        style={{
+                          fontFamily: "'Baloo 2', cursive",
+                          fontWeight: 700,
+                          fontSize: '0.85rem',
+                          background: 'linear-gradient(135deg, #F59E0B, #B45309)',
+                          color: '#fff',
+                          border: 'none',
+                          padding: '8px 18px',
+                          borderRadius: '999px',
+                          cursor: 'pointer',
+                          transition: 'opacity 0.2s',
+                        }}
+                        onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
+                        onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
+                        aria-label={`Add ${cake.name} to cart`}
+                      >
+                        Add to Cart
+                      </button>
+                    )}
                   </div>
                 </div>
               </article>

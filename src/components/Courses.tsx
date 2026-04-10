@@ -157,7 +157,7 @@ export default function Courses() {
           gap: '28px',
           alignItems: 'start',
         }}>
-          {courses.map((course, idx) => {
+          {courses.map((course) => {
             const isPopular = course.tag === 'Most Popular';
             return (
               <article

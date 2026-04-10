@@ -99,7 +99,7 @@ export default function FAQ() {
                   cursor: 'pointer',
                   textAlign: 'left',
                 }}
-                aria-expanded={open === i}
+                aria-expanded={open === i ? "true" : "false"}
               >
                 <span style={{
                   fontFamily: "'Baloo 2', cursive",
