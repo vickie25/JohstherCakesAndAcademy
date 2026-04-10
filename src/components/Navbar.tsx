@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import AuthModal from './AuthModal';
+import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
 
 const navLinks = [
   { label: 'Home',      href: '#home' },
@@ -15,6 +17,9 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
   const [authDefaultTab, setAuthDefaultTab] = useState<'login' | 'signup'>('login');
+
+  const { user, logout } = useAuth();
+  const { totalItems, setIsCartOpen } = useCart();
 
   const openAuth = (tab: 'login' | 'signup') => {
     setAuthDefaultTab(tab);
@@ -103,7 +108,7 @@ export default function Navbar() {
           ))}
         </ul>
 
-        {/* CTA + Auth buttons */}
+        {/* CTA + Auth/Cart buttons */}
         <div className="hidden-mobile" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <a
             href="#courses"
@@ -132,73 +137,161 @@ export default function Navbar() {
             Join Class
           </a>
 
-          {/* Auth Icon Button */}
+          {/* Cart Icon Button */}
           <button
-            id="nav-auth-btn"
-            onClick={() => openAuth('login')}
-            aria-label="Sign in or create account"
-            title="Sign in / Sign up"
+            onClick={() => setIsCartOpen(true)}
+            aria-label="View cart"
+            title="Cart"
             style={{
-              background: '#F59E0B22',
-              border: '1.5px solid #F59E0B66',
-              borderRadius: '50%',
+              position: 'relative',
+              background: 'transparent',
+              border: 'none',
               width: 38,
               height: 38,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
-              transition: 'all 0.2s ease',
               color: '#92400E',
-              flexShrink: 0,
-            }}
-            onMouseEnter={e => {
-              (e.currentTarget as HTMLButtonElement).style.background = '#F59E0B';
-              (e.currentTarget as HTMLButtonElement).style.color = '#fff';
-              (e.currentTarget as HTMLButtonElement).style.borderColor = '#F59E0B';
-              (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 4px 12px rgba(245,158,11,0.4)';
-            }}
-            onMouseLeave={e => {
-              (e.currentTarget as HTMLButtonElement).style.background = '#F59E0B22';
-              (e.currentTarget as HTMLButtonElement).style.color = '#92400E';
-              (e.currentTarget as HTMLButtonElement).style.borderColor = '#F59E0B66';
-              (e.currentTarget as HTMLButtonElement).style.boxShadow = 'none';
             }}
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-              <circle cx="12" cy="7" r="4"/>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="9" cy="21" r="1"></circle>
+              <circle cx="20" cy="21" r="1"></circle>
+              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
             </svg>
+            {totalItems > 0 && (
+              <span style={{
+                position: 'absolute', top: 0, right: 0, background: '#DC2626', color: '#fff',
+                fontSize: '0.65rem', fontWeight: 'bold', width: 18, height: 18, borderRadius: '50%',
+                display: 'flex', alignItems: 'center', justifyContent: 'center'
+              }}>
+                {totalItems}
+              </span>
+            )}
           </button>
+
+          {/* Auth Icon or Profile Info Button */}
+          {user ? (
+            <div className="user-menu" style={{ position: 'relative', display: 'inline-block' }}>
+              <button
+                style={{
+                  padding: 0,
+                  background: 'none',
+                  border: '2px solid #F59E0B66',
+                  borderRadius: '50%',
+                  width: 38,
+                  height: 38,
+                  overflow: 'hidden',
+                  cursor: 'pointer',
+                  display: 'flex'
+                }}
+              >
+                <img src={user.avatar} alt={user.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              </button>
+              <div className="user-dropdown">
+                <p style={{ margin: '0 0 4px', fontWeight: 'bold', color: '#78350F' }}>{user.name}</p>
+                <p style={{ margin: '0 0 12px', fontSize: '0.8rem', color: '#92400E' }}>{user.email}</p>
+                <button onClick={logout} style={{
+                  background: '#DC2626', color: 'white', border: 'none', borderRadius: 8, padding: '6px 12px',
+                  cursor: 'pointer', width: '100%', fontFamily: "'Baloo 2', cursive", fontWeight: 700
+                }}>
+                  Sign Out
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              id="nav-auth-btn"
+              onClick={() => openAuth('login')}
+              aria-label="Sign in or create account"
+              title="Sign in / Sign up"
+              style={{
+                background: '#F59E0B22',
+                border: '1.5px solid #F59E0B66',
+                borderRadius: '50%',
+                width: 38,
+                height: 38,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                color: '#92400E',
+                flexShrink: 0,
+              }}
+              onMouseEnter={e => {
+                (e.currentTarget as HTMLButtonElement).style.background = '#F59E0B';
+                (e.currentTarget as HTMLButtonElement).style.color = '#fff';
+                (e.currentTarget as HTMLButtonElement).style.borderColor = '#F59E0B';
+                (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 4px 12px rgba(245,158,11,0.4)';
+              }}
+              onMouseLeave={e => {
+                (e.currentTarget as HTMLButtonElement).style.background = '#F59E0B22';
+                (e.currentTarget as HTMLButtonElement).style.color = '#92400E';
+                (e.currentTarget as HTMLButtonElement).style.borderColor = '#F59E0B66';
+                (e.currentTarget as HTMLButtonElement).style.boxShadow = 'none';
+              }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+            </button>
+          )}
         </div>
 
-        {/* Mobile: Auth icon + Hamburger side-by-side */}
-        <div className="show-mobile" style={{ display: 'none', alignItems: 'center', gap: 8 }}>
-          {/* Auth icon on mobile */}
-          <button
-            id="nav-auth-btn-mobile"
-            onClick={() => openAuth('login')}
-            aria-label="Sign in or create account"
-            title="Sign in / Sign up"
-            style={{
-              background: '#F59E0B22',
-              border: '1.5px solid #F59E0B66',
-              borderRadius: '50%',
-              width: 36,
-              height: 36,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              color: '#92400E',
-              flexShrink: 0,
-            }}
-          >
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-              <circle cx="12" cy="7" r="4"/>
+        {/* Mobile: Auth/Cart icon + Hamburger side-by-side */}
+        <div className="show-mobile" style={{ display: 'none', alignItems: 'center', gap: 12 }}>
+          {/* Cart icon on mobile */}
+          <button onClick={() => setIsCartOpen(true)} style={{ position: 'relative', background: 'none', border: 'none', color: '#92400E', padding: 0 }}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="9" cy="21" r="1"></circle>
+              <circle cx="20" cy="21" r="1"></circle>
+              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
             </svg>
+            {totalItems > 0 && (
+              <span style={{
+                position: 'absolute', top: -5, right: -8, background: '#DC2626', color: '#fff',
+                fontSize: '0.65rem', fontWeight: 'bold', width: 16, height: 16, borderRadius: '50%',
+                display: 'flex', alignItems: 'center', justifyContent: 'center'
+              }}>
+                {totalItems}
+              </span>
+            )}
           </button>
+
+          {/* Auth icon on mobile */}
+          {user ? (
+            <button onClick={logout} style={{ padding: 0, border: 'none', borderRadius: '50%', width: 32, height: 32, overflow: 'hidden' }}>
+              <img src={user.avatar} alt="Profile" style={{width:'100%',height:'100%'}}/>
+            </button>
+          ) : (
+            <button
+              id="nav-auth-btn-mobile"
+              onClick={() => openAuth('login')}
+              aria-label="Sign in or create account"
+              title="Sign in / Sign up"
+              style={{
+                background: '#F59E0B22',
+                border: '1.5px solid #F59E0B66',
+                borderRadius: '50%',
+                width: 32,
+                height: 32,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                color: '#92400E',
+                flexShrink: 0,
+              }}
+            >
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+            </button>
+          )}
 
           {/* Hamburger */}
           <button
@@ -215,16 +308,16 @@ export default function Navbar() {
           >
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#92400E" strokeWidth="2.5" strokeLinecap="round">
               {menuOpen ? (
-                <>
-                  <line x1="18" y1="6" x2="6" y2="18"/>
-                  <line x1="6" y1="6" x2="18" y2="18"/>
-                </>
+                 <>
+                   <line x1="18" y1="6" x2="6" y2="18"/>
+                   <line x1="6" y1="6" x2="18" y2="18"/>
+                 </>
               ) : (
-                <>
-                  <line x1="3" y1="7" x2="21" y2="7"/>
-                  <line x1="3" y1="12" x2="21" y2="12"/>
-                  <line x1="3" y1="17" x2="21" y2="17"/>
-                </>
+                 <>
+                   <line x1="3" y1="7" x2="21" y2="7"/>
+                   <line x1="3" y1="12" x2="21" y2="12"/>
+                   <line x1="3" y1="17" x2="21" y2="17"/>
+                 </>
               )}
             </svg>
           </button>
@@ -281,42 +374,29 @@ export default function Navbar() {
             Join Class
           </a>
 
-          {/* Auth buttons in mobile menu */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 8 }}>
-            <button
-              onClick={() => { setMenuOpen(false); openAuth('login'); }}
-              style={{
-                padding: '10px',
-                border: '1.5px solid #92400E',
-                borderRadius: '12px',
-                background: 'transparent',
-                color: '#92400E',
-                fontFamily: "'Baloo 2', cursive",
-                fontWeight: 700,
-                fontSize: '0.9rem',
-                cursor: 'pointer',
-              }}
-            >
-              Sign In
-            </button>
-            <button
-              onClick={() => { setMenuOpen(false); openAuth('signup'); }}
-              style={{
-                padding: '10px',
-                border: 'none',
-                borderRadius: '12px',
-                background: 'linear-gradient(135deg,#F59E0B,#B45309)',
-                color: '#fff',
-                fontFamily: "'Baloo 2', cursive",
-                fontWeight: 700,
-                fontSize: '0.9rem',
-                cursor: 'pointer',
-                boxShadow: '0 3px 10px rgba(245,158,11,0.35)',
-              }}
-            >
-              Sign Up
-            </button>
-          </div>
+          {!user && (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 8 }}>
+              <button
+                onClick={() => { setMenuOpen(false); openAuth('login'); }}
+                style={{
+                  padding: '10px', border: '1.5px solid #92400E', borderRadius: '12px',
+                  background: 'transparent', color: '#92400E', fontFamily: "'Baloo 2', cursive", fontWeight: 700, fontSize: '0.9rem'
+                }}
+              >
+                Sign In
+              </button>
+              <button
+                onClick={() => { setMenuOpen(false); openAuth('signup'); }}
+                style={{
+                  padding: '10px', border: 'none', borderRadius: '12px',
+                  background: 'linear-gradient(135deg,#F59E0B,#B45309)', color: '#fff',
+                  fontFamily: "'Baloo 2', cursive", fontWeight: 700, fontSize: '0.9rem', boxShadow: '0 3px 10px rgba(245,158,11,0.35)'
+                }}
+              >
+                Sign Up
+              </button>
+            </div>
+          )}
         </div>
       )}
 
@@ -324,6 +404,27 @@ export default function Navbar() {
         @media (max-width: 768px) {
           .hidden-mobile { display: none !important; }
           .show-mobile { display: flex !important; }
+        }
+        .user-dropdown {
+          position: absolute;
+          top: 100%;
+          right: 0;
+          margin-top: 10px;
+          background: #FFFBEB;
+          border: 2px solid #F59E0B;
+          border-radius: 12px;
+          padding: 16px;
+          min-width: 200px;
+          box-shadow: 0 10px 25px rgba(146,64,14,0.15);
+          opacity: 0;
+          visibility: hidden;
+          transition: all 0.2s ease;
+          transform: translateY(10px);
+        }
+        .user-menu:hover .user-dropdown, .user-dropdown:focus-within {
+          opacity: 1;
+          visibility: visible;
+          transform: translateY(0);
         }
       `}</style>
 

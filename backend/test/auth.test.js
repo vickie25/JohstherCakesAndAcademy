@@ -4,22 +4,26 @@ const app = require('../src/app');
 describe('Authentication Tests', () => {
   let server;
 
-  beforeAll(() => {
-    // Start the server for testing
-    const PORT = process.env.PORT || 5000;
-    server = app.listen(PORT);
+  beforeAll(async () => {
+    // Use port 0 to get a random available port
+    server = app.listen(0);
   });
 
-  afterAll(() => {
-    // Close the server after tests
-    server.close();
+  afterAll(async () => {
+    if (server) {
+      await new Promise((resolve) => {
+        server.close(resolve);
+      });
+    }
   });
 
   describe('POST /api/auth/register', () => {
     it('should register a new user successfully', async () => {
+      // Use timestamp to ensure unique email for each test run
+      const timestamp = Date.now();
       const userData = {
         name: 'Test User',
-        email: 'test@example.com',
+        email: `test${timestamp}@example.com`,
         password: 'Password123'
       };
 
@@ -68,9 +72,27 @@ describe('Authentication Tests', () => {
   });
 
   describe('POST /api/auth/login', () => {
+    let testUserEmail;
+
+    beforeAll(async () => {
+      // Create a test user for login tests
+      const timestamp = Date.now();
+      testUserEmail = `logintest${timestamp}@example.com`;
+      
+      const userData = {
+        name: 'Login Test User',
+        email: testUserEmail,
+        password: 'Password123'
+      };
+
+      await request(app)
+        .post('/api/auth/register')
+        .send(userData);
+    });
+
     it('should login user successfully', async () => {
       const loginData = {
-        email: 'test@example.com',
+        email: testUserEmail,
         password: 'Password123'
       };
 
@@ -120,9 +142,9 @@ describe('Authentication Tests', () => {
     let token;
 
     beforeAll(async () => {
-      // Get token by logging in
+      // Get token by logging in with the test user created above
       const loginData = {
-        email: 'test@example.com',
+        email: testUserEmail,
         password: 'Password123'
       };
 
@@ -140,7 +162,7 @@ describe('Authentication Tests', () => {
         .expect(200);
 
       expect(response.body.success).toBe(true);
-      expect(response.body.data.user.email).toBe('test@example.com');
+      expect(response.body.data.user.email).toBe(testUserEmail);
     });
 
     it('should not access protected route without token', async () => {

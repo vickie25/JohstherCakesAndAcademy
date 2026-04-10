@@ -7,11 +7,13 @@ import Testimonials from './components/Testimonials';
 import FAQ from './components/FAQ';
 import Contact from './components/Contact';
 import Footer from './components/Footer';
+import CartDrawer from './components/CartDrawer';
 
 export default function App() {
   return (
     <>
       <Navbar />
+      <CartDrawer />
       <main>
         <Hero />
         <CakesShowcase />

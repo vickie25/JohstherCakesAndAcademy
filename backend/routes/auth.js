@@ -2,6 +2,7 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const { validateRegistration, validateLogin } = require('../middleware/validation');
+const emailService = require('../config/email');
 
 const router = express.Router();
 
@@ -36,9 +37,14 @@ router.post('/register', validateRegistration, async (req, res) => {
     // Generate token
     const token = generateToken(user.id);
 
+    // Send welcome email (async, don't wait for it to complete)
+    emailService.sendWelcomeEmail(user.email, user.name).catch(emailError => {
+      console.error('Failed to send welcome email:', emailError);
+    });
+
     res.status(201).json({
       success: true,
-      message: 'User registered successfully!',
+      message: 'User registered successfully! Welcome email sent.',
       data: {
         user: {
           id: user.id,
