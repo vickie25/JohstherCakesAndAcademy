@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useAuth } from '../context/AuthContext';
 import { Eye, EyeOff } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import {
@@ -7,17 +8,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import {
-  Form,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
+
 
 /* ─── Types ─── */
 interface LoginFormData {
@@ -167,14 +158,33 @@ function LoginForm({ onClose }: { onClose: () => void }) {
   });
 
   const { register, handleSubmit, formState: { errors } } = form;
+  const { login } = useAuth();
 
   const onSubmit = async (data: LoginFormData) => {
     setLoading(true);
-    console.log('Login:', data);
-    await new Promise(r => setTimeout(r, 1200));
-    setLoading(false);
-    setSuccess(true);
-    setTimeout(() => { setSuccess(false); onClose(); }, 1500);
+    try {
+      const response = await fetch('http://localhost:5000/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: data.email, password: data.password }),
+      });
+      
+      const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(result.message || 'Failed to sign in. Please check your credentials.');
+      }
+
+      setLoading(false);
+      setSuccess(true);
+      login(result.data?.user?.email || data.email, result.data?.user?.name);
+      setTimeout(() => { setSuccess(false); onClose(); }, 1500);
+    } catch (error: any) {
+      setLoading(false);
+      form.setError('root', { message: error.message });
+    }
   };
 
   if (success) {
@@ -193,6 +203,11 @@ function LoginForm({ onClose }: { onClose: () => void }) {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      {errors.root && (
+        <div style={{ background: '#FEF2F2', border: '1px solid #FCA5A5', color: '#DC2626', padding: '10px', borderRadius: '10px', fontSize: '0.85rem', fontFamily: "'Comic Neue', cursive", textAlign: 'center' }}>
+          {errors.root.message}
+        </div>
+      )}
       <FieldWrapper
         label="Email Address"
         id="login-email"
@@ -317,14 +332,37 @@ function SignupForm({ onClose }: { onClose: () => void }) {
 
   const { register, handleSubmit, watch, formState: { errors } } = form;
   const password = watch('password');
+  const { login } = useAuth();
 
   const onSubmit = async (data: SignupFormData) => {
     setLoading(true);
-    console.log('Signup:', data);
-    await new Promise(r => setTimeout(r, 1400));
-    setLoading(false);
-    setSuccess(true);
-    setTimeout(() => { setSuccess(false); onClose(); }, 2000);
+    try {
+      const response = await fetch('http://localhost:5000/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          name: data.fullName,
+          email: data.email, 
+          password: data.password 
+        }),
+      });
+      
+      const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(result.message || 'Failed to create account.');
+      }
+
+      setLoading(false);
+      setSuccess(true);
+      login(result.data?.user?.email || data.email, result.data?.user?.name || data.fullName);
+      setTimeout(() => { setSuccess(false); onClose(); }, 2000);
+    } catch (error: any) {
+      setLoading(false);
+      form.setError('root', { message: error.message });
+    }
   };
 
   if (success) {
@@ -344,6 +382,11 @@ function SignupForm({ onClose }: { onClose: () => void }) {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      {errors.root && (
+        <div style={{ background: '#FEF2F2', border: '1px solid #FCA5A5', color: '#DC2626', padding: '10px', borderRadius: '10px', fontSize: '0.85rem', fontFamily: "'Comic Neue', cursive", textAlign: 'center' }}>
+          {errors.root.message}
+        </div>
+      )}
       <FieldWrapper
         label="Full Name"
         id="signup-name"

@@ -60,4 +60,29 @@ router.put('/profile', authMiddleware, async (req, res) => {
   }
 });
 
+// @route   GET /api/users
+// @desc    Get all users (for testing)
+// @access  Public
+router.get('/', async (req, res) => {
+  try {
+    const db = require('../config/database');
+    const query = 'SELECT id, name, email, created_at, updated_at FROM users ORDER BY created_at DESC';
+    const result = await db.query(query);
+    
+    res.json({
+      success: true,
+      message: 'All users retrieved successfully',
+      data: {
+        users: result.rows
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching all users:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error fetching users.'
+    });
+  }
+});
+
 module.exports = router;
