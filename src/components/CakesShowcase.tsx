@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useCart } from '../context/CartContext';
+import { useNavigation } from '../context/NavigationContext';
 
 const categories = ['All', 'Wedding', 'Birthday', 'Custom', 'Academy'];
 
@@ -73,6 +74,7 @@ export default function CakesShowcase() {
   const [active, setActive] = useState('All');
   const ref = useRef<HTMLElement>(null);
   const { items, addToCart, updateQuantity } = useCart();
+  const { goToCakes } = useNavigation();
 
   const filtered = active === 'All' ? cakes : cakes.filter(c => c.category === active);
 
@@ -248,8 +250,11 @@ export default function CakesShowcase() {
 
         {/* CTA */}
         <div className="fade-up" style={{ textAlign: 'center', marginTop: '60px' }}>
-          <a
-            href="#contact"
+          <button
+            onClick={() => {
+              goToCakes();
+              window.scrollTo({ top: 0, behavior: 'instant' });
+            }}
             style={{
               fontFamily: "'Baloo 2', cursive",
               fontWeight: 700,
@@ -267,8 +272,8 @@ export default function CakesShowcase() {
             onMouseEnter={e => { (e.currentTarget).style.background = '#92400E'; (e.currentTarget).style.color = '#fff'; }}
             onMouseLeave={e => { (e.currentTarget).style.background = 'transparent'; (e.currentTarget).style.color = '#92400E'; }}
           >
-            Request a Custom Cake →
-          </a>
+            Design Your Custom Cake →
+          </button>
         </div>
       </div>
     </section>

@@ -2,64 +2,61 @@ import { useEffect, useRef } from 'react';
 
 const courses = [
   {
-    name: 'Beginner Baker',
-    subtitle: 'Start your sweet journey',
-    price: 'KES 4,500',
-    duration: '2-day workshop',
-    sessions: '4 hours/day',
+    name: 'Beginner Baker Online',
+    subtitle: 'Master the basics from your own kitchen',
+    price: 'KES 2,900',
+    duration: '12 Video Modules',
+    sessions: 'Lifetime Access',
     tag: null,
     image: '/hero_baker.png',
     color: '#B45309',
     features: [
-      'Basic cake mixing techniques',
-      'Simple frosting & decorating',
-      'Cupcake design fundamentals',
-      'Basic food safety & hygiene',
-      'Take-home recipe booklet',
-      'Certificate of participation',
+      'Step-by-step video tutorials',
+      'Downloadable recipe PDFs',
+      'Private WhatsApp support group',
+      'Learn at your own pace',
+      'Digital certificate of completion',
     ],
-    cta: 'Enrol Now',
+    cta: 'Get Instant Access',
   },
   {
-    name: 'Intermediate Cake Artist',
-    subtitle: 'Elevate your baking skills',
-    price: 'KES 9,800',
-    duration: '5-day intensive',
-    sessions: '5 hours/day',
-    tag: 'Most Popular',
+    name: 'Master Cake Artist',
+    subtitle: 'Advanced techniques, anywhere in the world',
+    price: 'KES 7,500',
+    subtitle_2: 'Pro-level certification',
+    duration: '24 HD Lessons',
+    sessions: 'On-Demand',
+    tag: 'Best Seller',
     image: '/hero_cake_elegant.png',
     color: '#F59E0B',
     features: [
-      'Fondant modelling & sculpting',
-      'Multi-tier cake assembly',
-      'Sugar flower making',
-      'Cake costing & pricing for business',
-      'Portfolio photo session',
-      'Professional certificate',
-      'Access to alumni community',
+      'Fondant & Sculpting masterclass',
+      'Multi-tier cake architecture',
+      'Business & Pricing modules',
+      'Monthly Live Q&A sessions',
+      'Professional Portfolio tips',
+      'Exclusive Alumni community',
     ],
-    cta: 'Enrol Now',
+    cta: 'Enroll Online',
   },
   {
-    name: 'Pro Masterclass',
-    subtitle: 'Master the craft, launch your brand',
-    price: 'KES 18,500',
-    duration: '10-day full course',
-    sessions: '6 hours/day',
+    name: 'Professional Path',
+    subtitle: 'Launch your baking business digitally',
+    price: 'KES 12,000',
+    duration: 'Full Certification',
+    sessions: 'Unlimited Access',
     tag: 'Premium',
     image: '/academy-class.png',
     color: '#92400E',
     features: [
-      'Advanced sculpted & 3D cakes',
-      'Wedding & event cake mastery',
-      'Isomalt & chocolate work',
-      'Business setup & social media marketing',
-      'Live client interaction sessions',
-      'Pro-level certificate',
-      'Job placement assistance',
-      '1-month mentorship follow-up',
+      'Advanced 3D & Sculpted cakes',
+      'Marketing & Social Media for bakers',
+      'Access to all future updates',
+      '1-on-1 Digital mentorship call',
+      'Business templates & contracts',
+      'Internship opportunities (Remote)',
     ],
-    cta: 'Apply Now',
+    cta: 'Start Pro Journey',
   },
 ];
 
@@ -88,7 +85,7 @@ export default function Courses() {
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round">
               <path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/>
             </svg>
-            Baking Courses
+            Online Baking Academy
           </div>
           <h2 style={{
             fontFamily: "'Baloo 2', cursive",
@@ -97,58 +94,13 @@ export default function Courses() {
             color: '#78350F',
             marginBottom: '16px',
           }}>
-            Pick Your <span style={{ color: '#F59E0B' }}>Perfect</span> Course
+            Learn <span style={{ color: '#F59E0B' }}>Anytime</span>, Anywhere
           </h2>
           <p style={{ fontFamily: "'Comic Neue', cursive", fontSize: '1.05rem', color: '#A16207', maxWidth: '520px', margin: '0 auto' }}>
-            From beginner cupcakes to professional wedding cakes — we have a class for every level. All courses include ingredients, tools & certification.
+            Can't make it to our Nairobi campus? Join our digital classroom and master the art of baking through high-quality video modules and expert support.
           </p>
         </div>
 
-        {/* Next upcoming class banner */}
-        <div className="fade-up" style={{
-          background: 'linear-gradient(135deg, #92400E, #B45309)',
-          borderRadius: '20px',
-          padding: '20px 28px',
-          marginBottom: '48px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: '16px',
-          flexWrap: 'wrap',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-            <div style={{
-              width: '44px', height: '44px',
-              background: 'rgba(245,158,11,0.2)',
-              borderRadius: '12px',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round">
-                <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-              </svg>
-            </div>
-            <div>
-              <div style={{ fontFamily: "'Baloo 2', cursive", fontWeight: 700, color: '#FEF3C7', fontSize: '1rem' }}>
-                Next Class: April 19, 2026 · Beginner Batch #12
-              </div>
-              <div style={{ fontFamily: "'Comic Neue', cursive", color: '#FDE68A', fontSize: '0.85rem' }}>
-                3 spots remaining — don't miss out!
-              </div>
-            </div>
-          </div>
-          <a
-            href="#contact"
-            style={{
-              fontFamily: "'Baloo 2', cursive", fontWeight: 700, fontSize: '0.9rem',
-              background: '#F59E0B', color: '#1C0A00',
-              padding: '10px 24px', borderRadius: '999px',
-              textDecoration: 'none', whiteSpace: 'nowrap',
-              transition: 'opacity 0.2s', cursor: 'pointer',
-            }}
-          >
-            Reserve My Spot
-          </a>
-        </div>
 
         {/* Course Cards */}
         <div style={{

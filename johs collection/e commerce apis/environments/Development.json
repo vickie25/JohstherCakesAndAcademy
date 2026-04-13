@@ -1,0 +1,11 @@
+{
+  "name": "Development",
+  "variables": {
+    "BASE_URL": {
+      "value": "https://app.requestly.io/echo",
+      "type": "string",
+      "id": "5696e33a-66ea-49d4-95ed-9a763cb81291",
+      "isSecret": false
+    }
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "name": "Login user",
+  "rank": "av",
+  "request": {
+    "type": "http",
+    "url": "http://localhost:5000/api/auth/login",
+    "scripts": {
+      "preRequest": "",
+      "postResponse": ""
+    },
+    "method": "POST",
+    "queryParams": [],
+    "headers": [],
+    "body": "{\n    \"email\": \"nyandorovictor3900@gmail.com\",\n    \"password\": \"Password123.\"\n  }",
+    "contentType": "application/json",
+    "auth": {
+      "currentAuthType": "BEARER_TOKEN",
+      "authConfigStore": {
+        "BEARER_TOKEN": {
+          "bearer": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsImlhdCI6MTc3NTc0OTY1MCwiZXhwIjoxNzc2MzU0NDUwfQ.RspnwneQoAUyenPdH-4ypPvQrgE9a63Po-waxihNv2k"
+        }
+      }
+    }
+  }
+}

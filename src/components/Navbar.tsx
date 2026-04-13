@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
+import { useNavigation } from '../context/NavigationContext';
 
 const navLinks = [
   { label: 'Home',      href: '#home' },
@@ -17,6 +18,31 @@ export default function Navbar() {
 
   const { user, logout, openAuthModal } = useAuth();
   const { totalItems, setIsCartOpen } = useCart();
+  const { currentPage, goToHome, goToCakes, goToAcademy, goToCourses } = useNavigation();
+
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, label: string, href: string) => {
+    if (label === 'Our Cakes') {
+      e.preventDefault();
+      goToCakes();
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    } else if (label === 'Academy') {
+      e.preventDefault();
+      goToAcademy();
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    } else if (label === 'Courses') {
+      e.preventDefault();
+      goToCourses();
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    } else if (currentPage !== 'home' && href.startsWith('#')) {
+      goToHome();
+      setTimeout(() => {
+        const element = document.querySelector(href);
+        if (element) {
+          window.scrollTo({ top: element.getBoundingClientRect().top + window.scrollY - 80, behavior: 'smooth' });
+        }
+      }, 100);
+    }
+  };
 
   const openAuth = (tab: 'login' | 'signup') => {
     openAuthModal(tab);
@@ -56,7 +82,7 @@ export default function Navbar() {
         }}
       >
         {/* Logo */}
-        <a href="#home" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <a href="#home" onClick={(e) => handleNavClick(e, 'Home', '#home')} style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px' }}>
           <span style={{ fontSize: '26px' }} aria-hidden="true">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M12 2C10.5 2 9.5 3 9 4C7.5 3.5 6 4.5 6 6H18C18 4.5 16.5 3.5 15 4C14.5 3 13.5 2 12 2Z" fill="#F59E0B"/>
@@ -77,6 +103,7 @@ export default function Navbar() {
             <li key={link.href}>
               <a
                 href={link.href}
+                onClick={(e) => handleNavClick(e, link.label, link.href)}
                 style={{
                   fontFamily: "'Baloo 2', cursive",
                   fontWeight: 600,
@@ -108,6 +135,7 @@ export default function Navbar() {
         <div className="hidden-mobile" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <a
             href="#courses"
+            onClick={(e) => handleNavClick(e, 'Courses', '#courses')}
             style={{
               fontFamily: "'Baloo 2', cursive",
               fontWeight: 700,
@@ -336,7 +364,10 @@ export default function Navbar() {
             <a
               key={link.href}
               href={link.href}
-              onClick={() => setMenuOpen(false)}
+              onClick={(e) => {
+                setMenuOpen(false);
+                handleNavClick(e, link.label, link.href);
+              }}
               style={{
                 display: 'block',
                 fontFamily: "'Baloo 2', cursive",
@@ -353,7 +384,10 @@ export default function Navbar() {
           ))}
           <a
             href="#courses"
-            onClick={() => setMenuOpen(false)}
+            onClick={(e) => {
+              setMenuOpen(false);
+              handleNavClick(e, 'Courses', '#courses');
+            }}
             style={{
               display: 'block',
               marginTop: '8px',

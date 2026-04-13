@@ -1,0 +1,46 @@
+{
+  "name": "Register user",
+  "rank": "auntit17757485417351",
+  "request": {
+    "type": "http",
+    "url": " http://localhost:5000/auth/register",
+    "scripts": {
+      "preRequest": "",
+      "postResponse": ""
+    },
+    "method": "POST",
+    "queryParams": [],
+    "headers": [
+      {
+        "id": 1775749278864000,
+        "key": "Name",
+        "value": "Minimum 2 characters",
+        "isEnabled": true,
+        "description": "",
+        "dataType": "string"
+      },
+      {
+        "id": 1775749278864001,
+        "key": "Email",
+        "value": "Valid email format",
+        "isEnabled": true,
+        "description": "",
+        "dataType": "string"
+      },
+      {
+        "id": 1775749278864002,
+        "key": "Password",
+        "value": "Minimum 8 characters, must contain uppercase, lowercase, and numbers",
+        "isEnabled": true,
+        "description": "",
+        "dataType": "string"
+      }
+    ],
+    "body": "{\n  \"name\": \"John Doe\",\n  \"email\": \"nyandorovictor3900@gmail.com\",\n  \"password\": \"Password123.\"\n}",
+    "contentType": "application/json",
+    "auth": {
+      "currentAuthType": "INHERIT",
+      "authConfigStore": {}
+    }
+  }
+}
