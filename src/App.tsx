@@ -12,6 +12,9 @@ import AuthModal from './components/AuthModal';
 import { useAuth } from './context/AuthContext';
 import { useNavigation } from './context/NavigationContext';
 import CheckoutPage from './pages/CheckoutPage';
+import OurCakes from './pages/OurCakes';
+import AcademyPage from './pages/AcademyPage';
+import CoursesPage from './pages/CoursesPage';
 
 export default function App() {
   const { isAuthModalOpen, closeAuthModal, authDefaultTab } = useAuth();
@@ -19,25 +22,43 @@ export default function App() {
 
   return (
     <>
-      {currentPage === 'home' && (
+      {currentPage !== 'checkout' && (
         <>
           <Navbar />
           <CartDrawer />
-          <main>
-            <Hero />
-            <CakesShowcase />
-            <Academy />
-            <Courses />
-            <Testimonials />
-            <FAQ />
-            <Contact />
-          </main>
-          <Footer />
         </>
+      )}
+
+      {currentPage === 'home' && (
+        <main>
+          <Hero />
+          <CakesShowcase />
+          <Academy />
+          <Courses />
+          <Testimonials />
+          <FAQ />
+          <Contact />
+        </main>
+      )}
+
+      {currentPage === 'cakes' && (
+        <OurCakes />
+      )}
+      
+      {currentPage === 'academy' && (
+        <AcademyPage />
+      )}
+
+      {currentPage === 'courses' && (
+        <CoursesPage />
       )}
 
       {currentPage === 'checkout' && (
         <CheckoutPage />
+      )}
+
+      {currentPage !== 'checkout' && (
+        <Footer />
       )}
       
       <AuthModal
