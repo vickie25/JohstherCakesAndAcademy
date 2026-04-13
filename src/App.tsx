@@ -15,6 +15,7 @@ import CheckoutPage from './pages/CheckoutPage';
 import OurCakes from './pages/OurCakes';
 import AcademyPage from './pages/AcademyPage';
 import CoursesPage from './pages/CoursesPage';
+import AboutPage from './pages/AboutPage';
 
 export default function App() {
   const { isAuthModalOpen, closeAuthModal, authDefaultTab } = useAuth();
@@ -51,6 +52,10 @@ export default function App() {
 
       {currentPage === 'courses' && (
         <CoursesPage />
+      )}
+
+      {currentPage === 'about' && (
+        <AboutPage />
       )}
 
       {currentPage === 'checkout' && (

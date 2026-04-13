@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, type ReactNode } from 'react';
 
-type PageView = 'home' | 'checkout' | 'cakes' | 'academy' | 'courses';
+type PageView = 'home' | 'checkout' | 'cakes' | 'academy' | 'courses' | 'about';
 
 interface NavigationContextType {
   currentPage: PageView;
@@ -9,6 +9,7 @@ interface NavigationContextType {
   goToCakes: () => void;
   goToAcademy: () => void;
   goToCourses: () => void;
+  goToAbout: () => void;
 }
 
 const NavigationContext = createContext<NavigationContextType | undefined>(undefined);
@@ -21,9 +22,10 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
   const goToCakes = () => setCurrentPage('cakes');
   const goToAcademy = () => setCurrentPage('academy');
   const goToCourses = () => setCurrentPage('courses');
+  const goToAbout = () => setCurrentPage('about');
 
   return (
-    <NavigationContext.Provider value={{ currentPage, goToHome, goToCheckout, goToCakes, goToAcademy, goToCourses }}>
+    <NavigationContext.Provider value={{ currentPage, goToHome, goToCheckout, goToCakes, goToAcademy, goToCourses, goToAbout }}>
       {children}
     </NavigationContext.Provider>
   );
