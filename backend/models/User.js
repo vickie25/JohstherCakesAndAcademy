@@ -10,13 +10,13 @@ class User {
     const hashedPassword = await bcrypt.hash(password, saltRounds);
     
     const query = `
-      INSERT INTO users (name, email, password_hash, created_at, updated_at)
-      VALUES ($1, $2, $3, NOW(), NOW())
-      RETURNING id, name, email, created_at
+      INSERT INTO users (name, email, password_hash, role, created_at, updated_at)
+      VALUES ($1, $2, $3, $4, NOW(), NOW())
+      RETURNING id, name, email, role, created_at
     `;
     
     try {
-      const result = await db.query(query, [name, email, hashedPassword]);
+      const result = await db.query(query, [name, email, hashedPassword, userData.role || 'user']);
       return result.rows[0];
     } catch (error) {
       if (error.code === '23505') { // Unique violation
@@ -33,7 +33,7 @@ class User {
   }
 
   static async findById(id) {
-    const query = 'SELECT id, name, email, created_at FROM users WHERE id = $1';
+    const query = 'SELECT id, name, email, role, created_at FROM users WHERE id = $1';
     const result = await db.query(query, [id]);
     return result.rows[0];
   }

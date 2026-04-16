@@ -7,9 +7,9 @@ const emailService = require('../config/email');
 const router = express.Router();
 
 // Generate JWT token
-const generateToken = (userId) => {
+const generateToken = (userId, role) => {
   return jwt.sign(
-    { userId },
+    { userId, role },
     process.env.JWT_SECRET,
     { expiresIn: process.env.JWT_EXPIRE }
   );
@@ -50,9 +50,10 @@ router.post('/register', validateRegistration, async (req, res) => {
           id: user.id,
           name: user.name,
           email: user.email,
+          role: user.role,
           createdAt: user.created_at
         },
-        token
+        token: generateToken(user.id, user.role)
       }
     });
   } catch (error) {
@@ -111,17 +112,86 @@ router.post('/login', validateLogin, async (req, res) => {
           id: user.id,
           name: user.name,
           email: user.email,
+          role: user.role,
           createdAt: user.created_at,
           lastLogin: user.last_login
+        },
+        token: generateToken(user.id, user.role)
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Server error during login.'
+    });
+  }
+});
+
+// @route   POST /api/auth/admin-login
+// @desc    Login admin with special credentials
+// @access  Public (Check logic inside)
+router.post('/admin-login', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+
+    // As requested: Any username, but password must be 'admin123'
+    // For "security" we will also check if an admin user exists in DB or just use this logic
+    if (password !== 'admin123') {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid admin credentials.'
+      });
+    }
+
+    // Usually we would find a specific admin user, but for now we follow the "credentials we give the system"
+    // We will look for a user with role 'admin' or just generate a token for this session
+    // To maintain security, let's find the first user with role 'admin' or create a shadow one
+    let admin = await User.findByEmail('admin@johsther.com');
+    
+    if (!admin) {
+      console.log('Admin not found, attempting to create default admin...');
+      try {
+        admin = await User.create({
+          name: 'System Admin',
+          email: 'admin@johsther.com',
+          password: 'admin123',
+          role: 'admin'
+        });
+        console.log('Default admin created successfully');
+      } catch (createError) {
+        console.warn('Failed to create default admin (possibly role column missing):', createError.message);
+        // Attempt one last find in case it exists but role couldn't be inserted
+        admin = await User.findByEmail('admin@johsther.com');
+      }
+    }
+
+    if (!admin) {
+      return res.status(500).json({
+        success: false,
+        message: 'Could not resolve admin user. Please ensure database schema is up to date (role column).'
+      });
+    }
+
+    const token = generateToken(admin.id, 'admin');
+
+    res.json({
+      success: true,
+      message: 'Admin login successful!',
+      data: {
+        user: {
+          id: admin.id,
+          name: admin.name,
+          email: admin.email,
+          role: 'admin'
         },
         token
       }
     });
   } catch (error) {
-    console.error('Login error:', error);
+    console.error('Admin login error:', error);
     res.status(500).json({
       success: false,
-      message: 'Server error during login.'
+      message: 'Server error during admin login.'
     });
   }
 });
