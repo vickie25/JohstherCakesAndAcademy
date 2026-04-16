@@ -17,13 +17,38 @@ import AcademyPage from './pages/AcademyPage';
 import CoursesPage from './pages/CoursesPage';
 import AboutPage from './pages/AboutPage';
 
+import AdminLoginPage from './pages/AdminLoginPage';
+import AdminDashboard from './pages/AdminDashboard';
+
 export default function App() {
   const { isAuthModalOpen, closeAuthModal, authDefaultTab } = useAuth();
-  const { currentPage } = useNavigation();
+  const { currentPage, goToAdminLogin } = useNavigation();
+
+  // Route Guard for Admin Dashboard
+  const isAdminAuthenticated = () => {
+    const token = localStorage.getItem('admin_token');
+    const userStr = localStorage.getItem('admin_user');
+    if (!token || !userStr) return false;
+    try {
+      const user = JSON.parse(userStr);
+      return user.role === 'admin';
+    } catch {
+      return false;
+    }
+  };
+
+  const isCheckout = currentPage === 'checkout';
+  const isAdminView = currentPage === 'admin-login' || currentPage === 'admin-dashboard';
+
+  // Redirect to login if trying to access dashboard without auth
+  if (currentPage === 'admin-dashboard' && !isAdminAuthenticated()) {
+    goToAdminLogin();
+    return null;
+  }
 
   return (
     <>
-      {currentPage !== 'checkout' && (
+      {!isCheckout && !isAdminView && (
         <>
           <Navbar />
           <CartDrawer />
@@ -42,27 +67,16 @@ export default function App() {
         </main>
       )}
 
-      {currentPage === 'cakes' && (
-        <OurCakes />
-      )}
-      
-      {currentPage === 'academy' && (
-        <AcademyPage />
-      )}
+      {currentPage === 'cakes' && <OurCakes />}
+      {currentPage === 'academy' && <AcademyPage />}
+      {currentPage === 'courses' && <CoursesPage />}
+      {currentPage === 'about' && <AboutPage />}
+      {currentPage === 'checkout' && <CheckoutPage />}
 
-      {currentPage === 'courses' && (
-        <CoursesPage />
-      )}
+      {currentPage === 'admin-login' && <AdminLoginPage />}
+      {currentPage === 'admin-dashboard' && <AdminDashboard />}
 
-      {currentPage === 'about' && (
-        <AboutPage />
-      )}
-
-      {currentPage === 'checkout' && (
-        <CheckoutPage />
-      )}
-
-      {currentPage !== 'checkout' && (
+      {!isCheckout && !isAdminView && (
         <Footer />
       )}
       
