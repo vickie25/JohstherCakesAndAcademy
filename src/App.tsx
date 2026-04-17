@@ -16,13 +16,14 @@ import OurCakes from './pages/OurCakes';
 import AcademyPage from './pages/AcademyPage';
 import CoursesPage from './pages/CoursesPage';
 import AboutPage from './pages/AboutPage';
+import ContactPage from './pages/ContactPage';
 
 import AdminLoginPage from './pages/AdminLoginPage';
 import AdminDashboard from './pages/AdminDashboard';
 
 export default function App() {
   const { isAuthModalOpen, closeAuthModal, authDefaultTab } = useAuth();
-  const { currentPage, goToAdminLogin } = useNavigation();
+  const { currentPage, goToAdminLogin, goToContact } = useNavigation();
 
   // Route Guard for Admin Dashboard
   const isAdminAuthenticated = () => {
@@ -71,6 +72,7 @@ export default function App() {
       {currentPage === 'academy' && <AcademyPage />}
       {currentPage === 'courses' && <CoursesPage />}
       {currentPage === 'about' && <AboutPage />}
+      {currentPage === 'contact' && <ContactPage />}
       {currentPage === 'checkout' && <CheckoutPage />}
 
       {currentPage === 'admin-login' && <AdminLoginPage />}
