@@ -1,48 +1,127 @@
 import { useEffect, useRef, useState } from 'react';
+import CourseRegistrationModal from './CourseRegistrationModal';
+import { apiRequest } from '../lib/api';
+import { Play, Clock, Users, ArrowRight, BookOpen, Check } from 'lucide-react';
 
 interface Course {
   id: number;
-  title: string;
-  subtitle: string;
+  name?: string;
+  title?: string;
+  desc?: string;
+  subtitle?: string;
   price: number;
   duration: string;
-  sessions: string;
-  image_url: string;
-  brand_color: string;
-  features: string[];
+  lessons: number;
+  students: number;
+  image?: string;
+  image_url?: string;
   tag: string;
+  features: string[];
 }
+
+const FALLBACK_COURSES: Course[] = [
+  { 
+    id: 501, 
+    name: 'Beginner Baker Pro', 
+    price: 2900, 
+    image: '/hero_baker.png', 
+    tag: 'Starter', 
+    desc: 'Master the science of cake mixing and basic decorating from scratch.',
+    lessons: 12,
+    duration: '5h 30m',
+    students: 1250,
+    features: ['Video Tutorials', 'Recipe PDFs', 'WhatsApp Support']
+  },
+  { 
+    id: 502, 
+    name: 'The Fondant Masterclass', 
+    price: 7500, 
+    image: '/hero_cake_elegant.png', 
+    tag: 'Best Seller', 
+    desc: 'Advanced sculpting, sharp edges, and multi-tier stability techniques.',
+    lessons: 24,
+    duration: '12h 45m',
+    students: 840,
+    features: ['HD Video', 'Doubt Clearing', 'Digital Certificate']
+  },
+  { 
+    id: 503, 
+    name: 'Baking Business Launchpad', 
+    price: 12000, 
+    image: '/academy-class.png', 
+    tag: 'Business', 
+    desc: 'Transform your passion into a profitable brand with marketing & costing.',
+    lessons: 30,
+    duration: '20h 15m',
+    students: 450,
+    features: ['1-on-1 Mentoring', 'Social Media Hub', 'Business Templates']
+  },
+];
+
+import { useNavigation } from '../context/NavigationContext';
+
 export default function Courses() {
   const ref = useRef<HTMLElement>(null);
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { goToCourses } = useNavigation();
+  const [courses, setCourses] = useState<Course[]>(FALLBACK_COURSES);
+  const [loading, setLoading] = useState(false);
+  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const openCourseModal = (course: Course) => {
+    setSelectedCourse(course);
+    setIsModalOpen(true);
+  };
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const obs = new IntersectionObserver(
-      entries => entries.forEach(e => e.isIntersecting && e.target.classList.add('visible')),
-      { threshold: 0.1 }
-    );
-    el.querySelectorAll('.fade-up').forEach(el => obs.observe(el));
 
     const fetchCourses = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/courses');
-        const data = await response.json();
-        if (data.success) {
-          setCourses(data.data);
+        const { data } = await apiRequest<Course[]>('/courses');
+        if (data && data.length > 0) {
+          setCourses(data.slice(0, 3));
         }
-      } catch (error) {
-        console.error('Failed to fetch courses:', error);
+      } catch (err) {
+        // Silently stay with dummy data
       } finally {
         setLoading(false);
       }
     };
     fetchCourses();
 
-    return () => obs.disconnect();
-  }, []);
+    const obs = new IntersectionObserver(
+      entries => {
+        entries.forEach(e => {
+          if (e.isIntersecting) {
+            e.target.classList.add('visible');
+            obs.unobserve(e.target);
+          }
+        });
+      },
+      { threshold: 0.1, rootMargin: '50px' }
+    );
+
+    const observer = new MutationObserver(() => {
+      el.querySelectorAll('.fade-up:not(.observed)').forEach(item => {
+        item.classList.add('observed');
+        obs.observe(item);
+      });
+    });
+
+    observer.observe(el, { childList: true, subtree: true });
+    
+    el.querySelectorAll('.fade-up').forEach(item => {
+      item.classList.add('observed');
+      obs.observe(item);
+    });
+
+    return () => {
+      obs.disconnect();
+      observer.disconnect();
+    };
+  }, [courses]);
 
   return (
     <section id="courses" ref={ref} style={{ padding: '100px 0', background: '#FEF3C7', position: 'relative', overflow: 'hidden' }}>
@@ -52,10 +131,7 @@ export default function Courses() {
         {/* Header */}
         <div className="fade-up" style={{ textAlign: 'center', marginBottom: '64px' }}>
           <div className="pill" style={{ background: '#FEF3C7', border: '2px solid #F59E0B', color: '#92400E', marginBottom: '16px', display: 'inline-flex' }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round">
-              <path d="M22 10v6M2 10l10-5 10 5-10 5z" /><path d="M6 12v5c3 3 9 3 12 0v-5" />
-            </svg>
-            Online Baking Academy
+            Our Training Hub
           </div>
           <h2 style={{
             fontFamily: "'Baloo 2', cursive",
@@ -64,10 +140,10 @@ export default function Courses() {
             color: '#78350F',
             marginBottom: '16px',
           }}>
-            Learn <span style={{ color: '#F59E0B' }}>Anytime</span>, Anywhere
+            Master the <span style={{ color: '#F59E0B' }}>Art</span> of Baking
           </h2>
           <p style={{ fontFamily: "'Comic Neue', cursive", fontSize: '1.05rem', color: '#A16207', maxWidth: '520px', margin: '0 auto' }}>
-            Can't make it to our Nairobi campus? Join our digital classroom and master the art of baking through high-quality video modules and expert support.
+            From beginner basics to professional certifications. Join our curriculum and master everything from artisanal bread to luxury wedding cakes.
           </p>
         </div>
 
@@ -86,7 +162,7 @@ export default function Courses() {
             </div>
           ) : courses.map((course) => {
             const isPopular = course.tag === 'Best Seller' || course.tag === 'Most Popular';
-            const color = course.brand_color || '#B45309';
+            const color = '#B45309';
             return (
               <article
                 key={course.id}
@@ -110,7 +186,7 @@ export default function Courses() {
                   <div style={{
                     position: 'absolute', top: '18px', right: '18px',
                     background: color,
-                    color: isPopular ? '#fff' : '#fff',
+                    color: '#fff',
                     fontFamily: "'Baloo 2', cursive",
                     fontWeight: 700,
                     fontSize: '0.75rem',
@@ -125,10 +201,10 @@ export default function Courses() {
                 {/* Image */}
                 <div style={{ height: '180px', overflow: 'hidden' }}>
                   <img
-                    src={course.image_url}
-                    alt={`${course.title} baking course at Johsther Academy`}
-                    style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.4s' }}
-                    onMouseEnter={e => (e.currentTarget.style.transform = 'scale(1.08)')}
+                    src={course.image || course.image_url}
+                    alt={`${course.name || course.title || 'Professional'} baking course at Johsther Academy`}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.5s ease' }}
+                    onMouseEnter={e => (e.currentTarget.style.transform = 'scale(1.05)')}
                     onMouseLeave={e => (e.currentTarget.style.transform = 'scale(1)')}
                   />
                 </div>
@@ -136,8 +212,7 @@ export default function Courses() {
                 <div style={{ padding: '24px 26px 28px', display: 'flex', flexDirection: 'column', flex: 1 }}>
                   {/* Duration pills */}
                   <div style={{ display: 'flex', gap: '8px', marginBottom: '14px', flexWrap: 'wrap' }}>
-                    {[course.duration, course.sessions].map(d => (
-                      <span key={d} style={{
+                     <span style={{
                         fontFamily: "'Baloo 2', cursive",
                         fontWeight: 600,
                         fontSize: '0.75rem',
@@ -146,24 +221,31 @@ export default function Courses() {
                         padding: '3px 10px',
                         borderRadius: '999px',
                         border: '1.5px solid #F5E6C8',
-                      }}>{d}</span>
-                    ))}
+                      }}>{course.duration}</span>
+                      <span style={{
+                        fontFamily: "'Baloo 2', cursive",
+                        fontWeight: 600,
+                        fontSize: '0.75rem',
+                        background: '#FEF3C7',
+                        color: '#92400E',
+                        padding: '3px 10px',
+                        borderRadius: '999px',
+                        border: '1.5px solid #F5E6C8',
+                      }}>{course.lessons} Lessons</span>
                   </div>
 
                   <h3 style={{ fontFamily: "'Baloo 2', cursive", fontWeight: 800, fontSize: '1.25rem', color: '#78350F', marginBottom: '4px' }}>
-                    {course.title}
+                    {course.name || course.title}
                   </h3>
-                  <p style={{ fontFamily: "'Comic Neue', cursive", fontSize: '0.88rem', color: '#A16207', marginBottom: '20px' }}>
-                    {course.subtitle}
+                  <p style={{ fontFamily: "'Comic Neue', cursive", color: '#A16207', fontSize: '0.9rem', marginBottom: '16px', lineHeight: 1.5, height: '40px', overflow: 'hidden' }}>
+                    {course.desc || course.subtitle}
                   </p>
 
                   {/* Features */}
                   <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 24px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    {course.features.map(f => (
+                    {(course.features || []).slice(0, 3).map(f => (
                       <li key={f} style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" style={{ flexShrink: 0, marginTop: 2 }}>
-                          <polyline points="20 6 9 17 4 12" />
-                        </svg>
+                        <Check size={18} className="text-emerald-500" />
                         <span style={{ fontFamily: "'Comic Neue', cursive", fontSize: '0.9rem', color: '#78350F' }}>{f}</span>
                       </li>
                     ))}
@@ -173,11 +255,12 @@ export default function Courses() {
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '16px', borderTop: '1.5px solid #F5E6C8', marginTop: 'auto' }}>
                     <div>
                       <div style={{ fontFamily: "'Baloo 2', cursive", fontWeight: 800, fontSize: '1.5rem', color: '#78350F' }}>
-                        KES {Number(course.price).toLocaleString()}
+                        KES {(course.price || 0).toLocaleString()}
                       </div>
-                      <div style={{ fontFamily: "'Comic Neue', cursive", fontSize: '0.78rem', color: '#A16207' }}>per person · all-inclusive</div>
+                      <div style={{ fontFamily: "'Comic Neue', cursive", fontSize: '0.78rem', color: '#A16207' }}>per person</div>
                     </div>
                     <button
+                      onClick={() => openCourseModal(course)}
                       style={{
                         fontFamily: "'Baloo 2', cursive",
                         fontWeight: 700,
@@ -193,7 +276,7 @@ export default function Courses() {
                       }}
                       onMouseEnter={e => { (e.currentTarget).style.opacity = '0.88'; (e.currentTarget).style.transform = 'translateY(-2px)'; }}
                       onMouseLeave={e => { (e.currentTarget).style.opacity = '1'; (e.currentTarget).style.transform = 'translateY(0)'; }}
-                      aria-label={`Enrol in ${course.title}`}
+                      aria-label={`Enrol in ${course.name}`}
                     >
                       Enrol Now
                     </button>
@@ -213,13 +296,44 @@ export default function Courses() {
           borderRadius: '20px',
           border: '2px solid #F5E6C8',
         }}>
-          <p style={{ fontFamily: "'Comic Neue', cursive", color: '#A16207', fontSize: '0.95rem', margin: 0 }}>
+          <p style={{ fontFamily: "'Comic Neue', cursive", color: '#A16207', fontSize: '0.95rem', margin: '0 0 16px' }}>
             <strong style={{ color: '#78350F', fontFamily: "'Baloo 2', cursive" }}>Planning a group or team-building event?</strong>
             {' '}We offer special group discounts for 5+ students.{' '}
             <a href="#contact" style={{ color: '#F59E0B', fontWeight: 700, textDecoration: 'none' }}>Contact us →</a>
           </p>
+          <button
+            onClick={() => {
+              goToCourses();
+              window.scrollTo({ top: 0, behavior: 'instant' });
+            }}
+            style={{
+              fontFamily: "'Baloo 2', cursive",
+              fontWeight: 700,
+              background: '#78350F',
+              color: '#fff',
+              padding: '12px 32px',
+              borderRadius: '999px',
+              textDecoration: 'none',
+              fontSize: '1rem',
+              transition: 'all 0.2s',
+              cursor: 'pointer',
+              display: 'inline-block',
+              border: 'none',
+              boxShadow: '0 6px 15px rgba(120, 53, 15, 0.2)'
+            }}
+            onMouseEnter={e => { (e.currentTarget).style.transform = 'translateY(-2px)'; }}
+            onMouseLeave={e => { (e.currentTarget).style.transform = 'translateY(0)'; }}
+          >
+            Explore Courses Hub →
+          </button>
         </div>
       </div>
+
+      <CourseRegistrationModal 
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        course={selectedCourse}
+      />
     </section>
   );
 }

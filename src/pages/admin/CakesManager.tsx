@@ -6,14 +6,27 @@ import {
   MoreVertical, 
   Edit2, 
   Trash2, 
-  Eye, 
   ChefHat, 
-  ExternalLink,
   Loader2,
   X,
-  CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Package,
+  TrendingUp,
+  Box,
+  LayoutGrid,
+  List
 } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+import { cn } from "@/lib/utils";
+import { apiRequest, formatCurrency } from '@/lib/api';
+
+const MOCK_CAKES: Cake[] = [
+  { id: 1, name: 'Victorian Velvet', category: 'Wedding', color: 'Red', price: 45000, image_url: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?q=80&w=2000', tag: 'Bestseller', description: 'Deep red velvet layers.', is_active: true },
+  { id: 2, name: 'Golden Sunrise', category: 'Birthday', color: 'Gold', price: 12000, image_url: 'https://images.unsplash.com/photo-1588195538326-c5b1e9f80a1b?q=80&w=2000', tag: 'New', description: 'Bright and citrusy.', is_active: true },
+  { id: 3, name: 'Chocolate Truffle', category: 'Corporate', color: 'Chocolate', price: 8500, image_url: 'https://images.unsplash.com/photo-1571115177098-24ec4209b5d5?q=80&w=2000', tag: '', description: 'Rich dark chocolate.', is_active: false },
+];
 
 interface Cake {
   id: number;
@@ -36,6 +49,8 @@ export default function CakesManager() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCake, setEditingCake] = useState<Cake | null>(null);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  
   const [form, setForm] = useState({
     name: '',
     category: 'Wedding',
@@ -43,23 +58,24 @@ export default function CakesManager() {
     price: '',
     image_url: '',
     tag: '',
-    description: ''
+    description: '',
+    is_active: true
   });
 
   const fetchCakes = async () => {
     try {
       setLoading(true);
-      const res = await fetch('http://localhost:5000/api/cakes?active=false', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('admin_token')}`
-        }
-      });
-      const data = await res.json();
-      if (data.success) {
-        setCakes(data.data);
+      const { data, error } = await apiRequest<Cake[]>('/cakes?active=false');
+      
+      if (data) {
+        setCakes(data);
+      } else if (error) {
+        console.warn('Backend connection failed, using mock data:', error);
+        setCakes(MOCK_CAKES);
       }
     } catch (error) {
-      console.error('Error fetching cakes:', error);
+      console.error('Error in fetchCakes:', error);
+      setCakes(MOCK_CAKES);
     } finally {
       setLoading(false);
     }
@@ -79,7 +95,8 @@ export default function CakesManager() {
         price: cake.price.toString(),
         image_url: cake.image_url,
         tag: cake.tag,
-        description: cake.description
+        description: cake.description,
+        is_active: cake.is_active
       });
     } else {
       setEditingCake(null);
@@ -90,7 +107,8 @@ export default function CakesManager() {
         price: '',
         image_url: '',
         tag: '',
-        description: ''
+        description: '',
+        is_active: true
       });
     }
     setIsModalOpen(true);
@@ -98,31 +116,21 @@ export default function CakesManager() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const url = editingCake 
-      ? `http://localhost:5000/api/cakes/${editingCake.id}` 
-      : 'http://localhost:5000/api/cakes';
-    
+    const endpoint = editingCake ? `/cakes/${editingCake.id}` : '/cakes';
     const method = editingCake ? 'PUT' : 'POST';
 
-    try {
-      const res = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('admin_token')}`
-        },
-        body: JSON.stringify({
-          ...form,
-          price: parseFloat(form.price)
-        })
-      });
+    const { data, error } = await apiRequest(endpoint, {
+      method,
+      body: JSON.stringify({
+        ...form,
+        price: parseFloat(form.price)
+      })
+    });
 
-      const data = await res.json();
-      if (data.success) {
-        setIsModalOpen(false);
-        fetchCakes();
-      }
-    } catch (error) {
+    if (data) {
+      setIsModalOpen(false);
+      fetchCakes();
+    } else {
       console.error('Error saving cake:', error);
     }
   };
@@ -130,18 +138,10 @@ export default function CakesManager() {
   const handleDelete = async (id: number) => {
     if (!window.confirm('Are you sure you want to remove this masterpiece?')) return;
     
-    try {
-      const res = await fetch(`http://localhost:5000/api/cakes/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('admin_token')}`
-        }
-      });
-      const data = await res.json();
-      if (data.success) {
-        fetchCakes();
-      }
-    } catch (error) {
+    const { data, error } = await apiRequest(`/cakes/${id}`, { method: 'DELETE' });
+    if (data) {
+      fetchCakes();
+    } else {
       console.error('Error deleting cake:', error);
     }
   };
@@ -151,251 +151,333 @@ export default function CakesManager() {
     cake.category.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const stats = [
+    { label: 'Total Products', value: cakes.length, icon: Package, tint: 'bg-[#E6F0FA] text-[#2A5A8A]' },
+    { label: 'Total Revenue', value: '200000', icon: TrendingUp, tint: 'bg-[#E8F5E8] text-[#3A7A3A]' },
+    { label: 'Instock', value: cakes.filter(c => c.is_active).length, icon: Box, tint: 'bg-[#FFF3E0] text-[var(--color-accent-primary)]' },
+    { label: 'Out of Stock', value: cakes.filter(c => !c.is_active).length, icon: AlertCircle, tint: 'bg-[#FDECEC] text-[#A03030]' },
+  ];
+
   return (
-    <div className="animate-in fade-in duration-700">
+    <div className="space-y-8 animate-in fade-in duration-500">
       {/* Header Area */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-['Baloo_2'] font-bold text-amber-950 mb-1">Cake Boutique</h2>
-          <p className="text-sm text-slate-500 font-medium">Manage your masterpiece gallery and product catalogue.</p>
+          <h1 className="font-display text-[34px] font-bold text-[var(--color-text-primary)]">Cake Boutique</h1>
+          <p className="text-[14px] text-[var(--color-text-secondary)]">Manage your masterpiece gallery and product catalogue.</p>
         </div>
-        <button 
+        <Button 
           onClick={() => handleOpenModal()}
-          className="flex items-center gap-2 px-6 py-3 bg-amber-950 text-white rounded-2xl font-bold text-sm hover:bg-amber-900 transition-all shadow-xl shadow-amber-950/20 active:scale-95"
+          className="bg-[var(--color-accent-primary)] hover:bg-[var(--color-accent-dark)] text-white rounded-[var(--radius-sm)] font-medium px-6 h-[44px] shadow-[var(--shadow-btn)]"
         >
-          <Plus size={18} />
-          Add New Cake
-        </button>
+          <Plus size={18} className="mr-2" />
+          Add Product
+        </Button>
       </div>
 
-      {/* Filters & Search */}
-      <div className="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm mb-6 flex flex-col md:flex-row gap-4 items-center">
-        <div className="relative flex-1 w-full">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-          <input 
-            type="text" 
-            placeholder="Search cakes by name or category..." 
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-12 pr-4 py-3 bg-slate-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-amber-500 transition-all font-medium"
-          />
+      {/* Stat Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {stats.map((stat, i) => {
+          const Icon = stat.icon;
+          return (
+            <div key={i} className="bg-[var(--color-bg-surface)] p-6 rounded-[var(--radius-lg)] shadow-[var(--shadow-card)]">
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${stat.tint} mb-4`}>
+                <Icon size={20} />
+              </div>
+              <p className="text-[var(--color-text-secondary)] text-[13px] font-medium mb-1">{stat.label}</p>
+              <p className="font-display text-[26px] font-bold text-[var(--color-text-primary)]">
+                {stat.label === 'Total Revenue' ? formatCurrency(200000) : stat.value}
+              </p>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Filter & View Switcher */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[var(--color-bg-surface)] p-4 rounded-[var(--radius-lg)] shadow-[var(--shadow-card)]">
+        <div className="flex items-center gap-4 flex-1">
+          <h2 className="font-display text-[20px] font-bold text-[var(--color-text-primary)] whitespace-nowrap">All Products</h2>
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-secondary)]" size={16} />
+            <Input 
+              type="text" 
+              placeholder="Search products..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full h-[40px] pl-10 pr-4 bg-[var(--color-bg-muted)] border-transparent rounded-[var(--radius-full)] text-[14px] outline-none focus:bg-white focus:border-[var(--color-border)] focus:ring-[var(--color-accent-primary)]/15 transition-all"
+            />
+          </div>
         </div>
-        <div className="flex items-center gap-2 w-full md:w-auto">
-          <button className="flex items-center gap-2 px-4 py-3 bg-white border border-slate-200 rounded-2xl text-sm font-bold text-slate-600 hover:bg-slate-50 transition-all flex-1 md:flex-none justify-center">
-            <Filter size={18} />
-            Category
-          </button>
-          <button className="flex items-center gap-2 px-4 py-3 bg-white border border-slate-200 rounded-2xl text-sm font-bold text-slate-600 hover:bg-slate-50 transition-all flex-1 md:flex-none justify-center">
-            <AlertCircle size={18} />
-            Status
-          </button>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center bg-[var(--color-bg-muted)] rounded-full p-1">
+            <button 
+              onClick={() => setViewMode('grid')}
+              className={cn(
+                "p-2 rounded-full transition-all",
+                viewMode === 'grid' ? "bg-white text-[var(--color-accent-primary)] shadow-sm" : "text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
+              )}
+            >
+              <LayoutGrid size={18} />
+            </button>
+            <button 
+              onClick={() => setViewMode('list')}
+              className={cn(
+                "p-2 rounded-full transition-all",
+                viewMode === 'list' ? "bg-white text-[var(--color-accent-primary)] shadow-sm" : "text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
+              )}
+            >
+              <List size={18} />
+            </button>
+          </div>
+          <Button variant="ghost" className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] font-semibold text-[13px]">
+            <Filter size={16} className="mr-2" />
+            Filter
+          </Button>
         </div>
       </div>
 
-      {/* Main Table */}
-      <div className="bg-white rounded-[40px] border border-slate-100 shadow-sm overflow-hidden">
-        {loading ? (
-          <div className="py-40 flex flex-col items-center justify-center text-slate-400">
-            <Loader2 size={40} className="animate-spin mb-4 text-amber-500" />
-            <p className="font-bold">Loading masterpieces...</p>
+      {/* Product Content */}
+      {loading ? (
+        <div className="py-20 flex flex-col items-center justify-center text-[var(--color-text-secondary)]">
+          <Loader2 size={32} className="animate-spin mb-4 text-[var(--color-accent-primary)]" />
+          <p className="text-[14px] font-medium">Synchronizing masterpieces...</p>
+        </div>
+      ) : filteredCakes.length > 0 ? (
+        viewMode === 'grid' ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 text-[DM Sans]">
+            {filteredCakes.map((cake) => (
+              <div 
+                key={cake.id} 
+                className="group bg-[var(--color-bg-surface)] rounded-[var(--radius-lg)] shadow-[var(--shadow-card)] overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:shadow-[var(--shadow-panel)] relative"
+              >
+                <div className="aspect-square w-full overflow-hidden relative">
+                  <img src={cake.image_url} alt={cake.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                  <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); handleOpenModal(cake); }}
+                      className="p-2 bg-white/90 backdrop-blur-sm rounded-full text-[var(--color-text-primary)] shadow-sm hover:text-[var(--color-accent-primary)]"
+                    >
+                      <Edit2 size={16} />
+                    </button>
+                  </div>
+                  {cake.tag && (
+                    <div className="absolute top-2 left-2 px-2 py-0.5 bg-[var(--color-accent-primary)] text-white text-[10px] font-bold uppercase rounded-sm">
+                      {cake.tag}
+                    </div>
+                  )}
+                </div>
+                <div className="p-4">
+                  <div className="flex items-start justify-between mb-1">
+                    <h3 className="text-[14px] font-semibold text-[var(--color-text-primary)] truncate flex-1">{cake.name}</h3>
+                  </div>
+                  <p className="text-[12px] text-[var(--color-text-secondary)] mb-3">{cake.category}</p>
+                  <div className="flex items-center justify-between">
+                    <StatusBadge status={cake.is_active ? 'active' : 'inactive'} label={cake.is_active ? 'ACTIVE' : 'INACTIVE'} className="text-[10px] scale-90 -ml-1" />
+                    <span className="text-[13px] font-bold text-[var(--color-accent-primary)]">{formatCurrency(cake.price)}</span>
+                  </div>
+                </div>
+                
+                {/* Overlay actions on hover */}
+                <div className="absolute top-2 right-2 flex flex-col gap-2 p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                   <button 
+                    onClick={() => handleDelete(cake.id)}
+                    className="p-1.5 bg-[var(--color-danger)] text-white rounded-md shadow-sm hover:scale-110 transition-transform"
+                   >
+                    <Trash2 size={14} />
+                   </button>
+                </div>
+              </div>
+            ))}
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left">
-              <thead>
-                <tr className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-100 bg-slate-50/50">
-                  <th className="px-8 py-5">Product Details</th>
-                  <th className="px-8 py-5">Category</th>
-                  <th className="px-8 py-5">Price</th>
-                  <th className="px-8 py-5">Theme</th>
-                  <th className="px-8 py-5">Status</th>
-                  <th className="px-8 py-5 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-50">
-                {filteredCakes.map((cake) => (
-                  <tr key={cake.id} className="group hover:bg-slate-50/80 transition-all">
-                    <td className="px-8 py-5">
-                      <div className="flex items-center gap-4">
-                        <div className="w-14 h-14 rounded-2xl overflow-hidden bg-slate-100 border border-slate-200 shrink-0">
-                          <img src={cake.image_url} alt={cake.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-bold text-amber-950 flex items-center gap-2">
-                            {cake.name}
-                            {cake.tag && <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-[8px] font-black rounded-full uppercase tracking-tighter">{cake.tag}</span>}
-                          </p>
-                          <p className="text-[10px] text-slate-400 font-medium line-clamp-1 max-w-[200px]">{cake.description}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-8 py-5">
-                      <span className="text-xs font-bold text-slate-600 bg-slate-100 px-3 py-1 rounded-lg">{cake.category}</span>
-                    </td>
-                    <td className="px-8 py-5">
-                      <span className="text-sm font-extrabold text-amber-950">KES {cake.price.toLocaleString()}</span>
-                    </td>
-                    <td className="px-8 py-5">
-                       <div className="flex items-center gap-2">
-                          <div className="w-4 h-4 rounded-full border border-slate-200" style={{ background: cake.color.toLowerCase() }} />
-                          <span className="text-xs font-bold text-slate-500">{cake.color}</span>
-                       </div>
-                    </td>
-                    <td className="px-8 py-5">
-                      <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
-                        cake.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-400'
-                      }`}>
-                        <div className={`w-1.5 h-1.5 rounded-full ${cake.is_active ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
-                        {cake.is_active ? 'Visible' : 'Draft'}
-                      </div>
-                    </td>
-                    <td className="px-8 py-5 text-right">
-                      <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button 
-                          onClick={() => handleOpenModal(cake)}
-                          className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-xl transition-all"
-                        >
-                          <Edit2 size={16} />
-                        </button>
-                        <button 
-                          onClick={() => handleDelete(cake.id)}
-                          className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                        <button className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all">
-                          <MoreVertical size={16} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="bg-[var(--color-bg-surface)] rounded-[var(--radius-lg)] shadow-[var(--shadow-card)] overflow-hidden">
+             {/* List view logic - Reusing simplified table pattern */}
+             <div className="overflow-x-auto">
+               <table className="w-full text-left text-[14px]">
+                 <thead className="bg-[var(--color-bg-muted)] text-[var(--color-text-secondary)] text-[11px] font-bold uppercase tracking-widest">
+                   <tr>
+                     <th className="px-6 py-4">Product</th>
+                     <th className="px-6 py-4">Category</th>
+                     <th className="px-6 py-4">Price</th>
+                     <th className="px-6 py-4">Status</th>
+                     <th className="px-6 py-4 text-right">Actions</th>
+                   </tr>
+                 </thead>
+                 <tbody className="divide-y divide-[var(--color-border)]">
+                   {filteredCakes.map((cake) => (
+                     <tr key={cake.id} className="hover:bg-[var(--color-bg-base)] transition-colors">
+                       <td className="px-6 py-4">
+                         <div className="flex items-center gap-3">
+                           <img src={cake.image_url} alt={cake.name} className="w-10 h-10 rounded-lg object-cover" />
+                           <span className="font-semibold text-[var(--color-text-primary)]">{cake.name}</span>
+                         </div>
+                       </td>
+                       <td className="px-6 py-4 text-[var(--color-text-secondary)]">{cake.category}</td>
+                       <td className="px-6 py-4 font-bold text-[var(--color-text-primary)]">{formatCurrency(cake.price)}</td>
+                       <td className="px-6 py-4">
+                         <StatusBadge status={cake.is_active ? 'active' : 'inactive'} />
+                       </td>
+                       <td className="px-6 py-4 text-right">
+                         <div className="flex items-center justify-end gap-2">
+                           <button onClick={() => handleOpenModal(cake)} className="p-2 text-[var(--color-text-secondary)] hover:text-[var(--color-accent-primary)]"><Edit2 size={16} /></button>
+                           <button onClick={() => handleDelete(cake.id)} className="p-2 text-[var(--color-text-secondary)] hover:text-[var(--color-danger)]"><Trash2 size={16} /></button>
+                         </div>
+                       </td>
+                     </tr>
+                   ))}
+                 </tbody>
+               </table>
+             </div>
           </div>
-        )}
+        )
+      ) : (
+        <div className="bg-[var(--color-bg-surface)] py-20 rounded-[var(--radius-lg)] shadow-[var(--shadow-card)] flex flex-col items-center justify-center text-[var(--color-text-secondary)]">
+          <ChefHat size={64} className="mb-4 text-[var(--color-accent-primary)]/20" />
+          <h3 className="font-display text-[20px] font-bold text-[var(--color-text-primary)] mb-2">No masterpieces yet</h3>
+          <p className="text-[14px] text-center max-w-xs mb-6">Start by adding your first premium cake creation to the boutique.</p>
+          <Button 
+            onClick={() => handleOpenModal()}
+            className="bg-[var(--color-accent-primary)] hover:bg-[var(--color-accent-dark)] text-white rounded-[var(--radius-sm)] px-6"
+          >
+            Add First Product
+          </Button>
+        </div>
+      )}
 
-        {!loading && filteredCakes.length === 0 && (
-          <div className="py-32 flex flex-col items-center justify-center text-slate-400">
-             <ChefHat size={48} className="mb-4 opacity-20" />
-             <p className="font-bold text-lg text-slate-400">No cakes found</p>
-             <p className="text-sm">Try adjusting your filters or search query.</p>
-          </div>
-        )}
-      </div>
-
-      {/* Product Modal */}
+      {/* Slide-over Panel for Add/Edit Product */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-           <div className="absolute inset-0 bg-amber-950/40 backdrop-blur-sm" onClick={() => setIsModalOpen(false)} />
-           <div className="relative bg-white w-full max-w-2xl rounded-[40px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
-              <div className="p-8 border-b border-slate-100 flex items-center justify-between">
-                 <h3 className="text-2xl font-['Baloo_2'] font-bold text-amber-950">
-                    {editingCake ? 'Edit Masterpiece' : 'Add New Cake'}
-                 </h3>
-                 <button 
-                    onClick={() => setIsModalOpen(false)}
-                    className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:text-amber-900 transition-all"
-                 >
-                    <X size={20} />
-                 </button>
+        <div className="fixed inset-0 z-[100] flex justify-end">
+          <div className="absolute inset-0 bg-[rgba(44,26,14,0.5)] backdrop-blur-sm transition-opacity" onClick={() => setIsModalOpen(false)} />
+          <div className="relative w-full max-w-[480px] bg-white h-full shadow-[var(--shadow-modal)] animate-in slide-in-from-right duration-300 flex flex-col">
+            <div className="flex items-center justify-between p-6 border-b border-[var(--color-border)]">
+              <h2 className="font-display text-[20px] font-bold text-[var(--color-text-primary)]">
+                {editingCake ? 'Edit Cake Masterpiece' : 'New Cake Creation'}
+              </h2>
+              <button 
+                onClick={() => setIsModalOpen(false)} 
+                className="p-2 hover:bg-[var(--color-bg-muted)] rounded-full text-[var(--color-text-secondary)] transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            
+            <form onSubmit={handleSubmit} className="flex-1 flex flex-col overflow-hidden">
+              <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
+                <div className="space-y-1.5">
+                  <label className="text-[13px] font-semibold text-[var(--color-text-primary)]">Product Name</label>
+                  <Input 
+                    required
+                    placeholder="e.g. Victorian Velvet Rose"
+                    value={form.name}
+                    onChange={e => setForm({...form, name: e.target.value})}
+                    className="h-[40px] border-[var(--color-border)] focus:border-[var(--color-accent-primary)]"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-[13px] font-semibold text-[var(--color-text-primary)]">Price (KSh)</label>
+                    <Input 
+                      required
+                      type="number"
+                      placeholder="e.g. 15000"
+                      value={form.price}
+                      onChange={e => setForm({...form, price: e.target.value})}
+                      className="h-[40px] border-[var(--color-border)]"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[13px] font-semibold text-[var(--color-text-primary)]">Category</label>
+                    <select 
+                      className="w-full h-[40px] px-3 bg-white border border-[var(--color-border)] rounded-[var(--radius-sm)] text-[14px] outline-none focus:border-[var(--color-accent-primary)] transition-colors"
+                      value={form.category}
+                      onChange={e => setForm({...form, category: e.target.value})}
+                    >
+                      {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                   <div className="space-y-1.5">
+                    <label className="text-[13px] font-semibold text-[var(--color-text-primary)]">Theme Color</label>
+                    <select 
+                      className="w-full h-[40px] px-3 bg-white border border-[var(--color-border)] rounded-[var(--radius-sm)] text-[14px] outline-none focus:border-[var(--color-accent-primary)] transition-colors"
+                      value={form.color}
+                      onChange={e => setForm({...form, color: e.target.value})}
+                    >
+                      {COLORS.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[13px] font-semibold text-[var(--color-text-primary)]">Tag (Optional)</label>
+                    <Input 
+                      placeholder="e.g. Best Seller"
+                      value={form.tag}
+                      onChange={e => setForm({...form, tag: e.target.value})}
+                      className="h-[40px] border-[var(--color-border)]"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[13px] font-semibold text-[var(--color-text-primary)]">Image URL</label>
+                  <Input 
+                    required
+                    placeholder="https://example.com/cake.jpg"
+                    value={form.image_url}
+                    onChange={e => setForm({...form, image_url: e.target.value})}
+                    className="h-[40px] border-[var(--color-border)]"
+                  />
+                  {form.image_url && (
+                    <div className="mt-2 aspect-video rounded-lg overflow-hidden border border-[var(--color-border)] bg-[var(--color-bg-muted)]">
+                      <img src={form.image_url} alt="Preview" className="w-full h-full object-cover" />
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[13px] font-semibold text-[var(--color-text-primary)]">Description</label>
+                  <textarea 
+                    required
+                    rows={4}
+                    placeholder="Describe the layers, flavors, and artisanal details..."
+                    className="w-full px-4 py-3 bg-white border border-[var(--color-border)] rounded-[var(--radius-sm)] text-[14px] outline-none focus:border-[var(--color-accent-primary)] shadow-sm resize-none transition-all"
+                    value={form.description}
+                    onChange={e => setForm({...form, description: e.target.value})}
+                  />
+                </div>
+
+                <div className="flex items-center gap-3 p-4 bg-[var(--color-bg-muted)] rounded-lg">
+                   <input 
+                    type="checkbox" 
+                    id="isActive" 
+                    checked={form.is_active}
+                    onChange={e => setForm({...form, is_active: e.target.checked})}
+                    className="w-4 h-4 accent-[var(--color-accent-primary)]"
+                   />
+                   <label htmlFor="isActive" className="text-[14px] font-medium text-[var(--color-text-primary)]">Mark as active in boutique</label>
+                </div>
               </div>
-
-              <form onSubmit={handleSubmit} className="p-8">
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                    <div>
-                        <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Cake Name</label>
-                        <input 
-                            required
-                            type="text" 
-                            className="w-full px-4 py-3 bg-slate-50 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-amber-500"
-                            placeholder="e.g. Royal Ivory Dream"
-                            value={form.name}
-                            onChange={e => setForm({...form, name: e.target.value})}
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Price (KES)</label>
-                        <input 
-                            required
-                            type="number" 
-                            className="w-full px-4 py-3 bg-slate-50 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-amber-500"
-                            placeholder="e.g. 12500"
-                            value={form.price}
-                            onChange={e => setForm({...form, price: e.target.value})}
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Category</label>
-                        <select 
-                            className="w-full px-4 py-3 bg-slate-50 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-amber-500"
-                            value={form.category}
-                            onChange={e => setForm({...form, category: e.target.value})}
-                        >
-                            {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                        </select>
-                    </div>
-                    <div>
-                        <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Color Theme</label>
-                        <select 
-                            className="w-full px-4 py-3 bg-slate-50 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-amber-500"
-                            value={form.color}
-                            onChange={e => setForm({...form, color: e.target.value})}
-                        >
-                            {COLORS.map(c => <option key={c} value={c}>{c}</option>)}
-                        </select>
-                    </div>
-                    <div>
-                        <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Tag / Badge</label>
-                        <input 
-                            type="text" 
-                            className="w-full px-4 py-3 bg-slate-50 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-amber-500"
-                            placeholder="e.g. Premium, Best Seller"
-                            value={form.tag}
-                            onChange={e => setForm({...form, tag: e.target.value})}
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Image URL</label>
-                        <input 
-                            required
-                            type="text" 
-                            className="w-full px-4 py-3 bg-slate-50 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-amber-500"
-                            placeholder="/hero_cake_elegant.png"
-                            value={form.image_url}
-                            onChange={e => setForm({...form, image_url: e.target.value})}
-                        />
-                    </div>
-                    <div className="md:col-span-2">
-                        <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Description</label>
-                        <textarea 
-                            required
-                            rows={3}
-                            className="w-full px-4 py-3 bg-slate-50 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-amber-500 resize-none"
-                            placeholder="Describe the flavors, layers, and artistic details..."
-                            value={form.description}
-                            onChange={e => setForm({...form, description: e.target.value})}
-                        />
-                    </div>
-                 </div>
-
-                 <div className="flex gap-4">
-                    <button 
-                        type="button"
-                        onClick={() => setIsModalOpen(false)}
-                        className="flex-1 px-8 py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold text-sm hover:bg-slate-200 transition-all"
-                    >
-                        Cancel
-                    </button>
-                    <button 
-                        type="submit"
-                        className="flex-1 px-8 py-4 bg-amber-950 text-white rounded-2xl font-bold text-sm hover:bg-amber-900 transition-all shadow-xl shadow-amber-950/20"
-                    >
-                        {editingCake ? 'Save Changes' : 'Publish Product'}
-                    </button>
-                 </div>
-              </form>
-           </div>
+              
+              <div className="p-6 bg-[var(--color-bg-base)] border-t border-[var(--color-border)] flex gap-4 mt-auto">
+                <Button 
+                  type="button" 
+                  variant="ghost" 
+                  onClick={() => setIsModalOpen(false)}
+                  className="flex-1 text-[var(--color-text-secondary)] font-semibold"
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit" 
+                  className="flex-1 bg-[var(--color-accent-primary)] hover:bg-[var(--color-accent-dark)] text-white shadow-[var(--shadow-btn)] font-semibold"
+                >
+                  {editingCake ? 'Save Cake' : 'Publish Product'}
+                </Button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>

@@ -1,51 +1,32 @@
 import { useState, useEffect } from 'react';
 import { X, Check, Smartphone, CreditCard, ShieldCheck, Lock, ArrowRight, User, Mail, Phone, Loader2 } from 'lucide-react';
 
-interface EnrollmentItem {
-  id?: string | number;
-  name: string;
-  date: string;
-  price: string;
+interface Course {
+  id: number;
+  name?: string;
+  title?: string;
+  desc?: string;
+  subtitle?: string;
+  price: number;
+  duration: string;
+  lessons: number;
   image?: string;
+  image_url?: string;
+  features: string[];
+  tag: string;
 }
 
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
-  item: EnrollmentItem | null;
+  course: Course | null;
 }
 
-export default function AcademyRegistrationModal({ isOpen, onClose, item }: ModalProps) {
-  // All hooks must be called before any conditional logic
-  const [hasError, setHasError] = useState(false);
+export default function CourseRegistrationModal({ isOpen, onClose, course }: ModalProps) {
   const [step, setStep] = useState(1);
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'mpesa'>('card');
   const [isProcessing, setIsProcessing] = useState(false);
   const [visibleElements, setVisibleElements] = useState<number>(0);
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: ''
-  });
-
-  // Safe item access with optional chaining
-  const safeItem = {
-    id: item?.id,
-    name: item?.name || 'Course',
-    date: item?.date || 'TBD',
-    price: item?.price || 'KES 0',
-    image: item?.image || '/academy-class.png'
-  };
-  
-  useEffect(() => {
-    if (hasError) {
-      console.error('AcademyRegistrationModal encountered an error');
-    }
-  }, [hasError]);
-
-  const handleComponentError = () => {
-    setHasError(true);
-  };
 
   useEffect(() => {
     if (isOpen) {
@@ -58,24 +39,13 @@ export default function AcademyRegistrationModal({ isOpen, onClose, item }: Moda
     }
   }, [isOpen, step]);
 
-  if (!isOpen || !item) return null;
+  if (!isOpen || !course) return null;
 
-  if (hasError) {
-    return (
-      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl p-8 max-w-md text-center border-2 border-red-200">
-          <h3 className="text-lg font-bold text-red-600 mb-4">Registration Error</h3>
-          <p className="text-gray-600 mb-4">There was an error loading the registration form. Please try again.</p>
-          <button 
-            onClick={onClose}
-            className="px-6 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors"
-          >
-            Close
-          </button>
-        </div>
-      </div>
-    );
-  }
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: ''
+  });
 
   const handlePay = async () => {
     if (!formData.name || !formData.email || !formData.phone) {
@@ -85,15 +55,15 @@ export default function AcademyRegistrationModal({ isOpen, onClose, item }: Moda
 
     setIsProcessing(true);
     try {
-      const response = await fetch('http://localhost:5000/api/academy/registrations', {
+      const response = await fetch('http://localhost:5000/api/course/enrollments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           student_name: formData.name,
           email: formData.email,
           phone: formData.phone,
-          course_name: safeItem.name,
-          batch_id: safeItem.id && typeof safeItem.id === 'number' ? safeItem.id : null
+          course_id: course.id,
+          course_name: course.name || course.title || 'Academy Course'
         })
       });
 
@@ -101,10 +71,10 @@ export default function AcademyRegistrationModal({ isOpen, onClose, item }: Moda
       if (data.success) {
         setStep(3);
       } else {
-        alert(data.message || 'Registration failed. Please try again.');
+        alert(data.message || 'Enrollment failed. Please try again.');
       }
     } catch (error) {
-      console.error('Registration error:', error);
+      console.error('Enrollment error:', error);
       alert('Connection error. Please check if the server is running.');
     } finally {
       setIsProcessing(false);
@@ -148,18 +118,19 @@ export default function AcademyRegistrationModal({ isOpen, onClose, item }: Moda
             <div className={`p-8 md:p-12 pb-4 shrink-0 transition-all duration-700 ${getVisibility(1)}`}>
               <div className="flex items-center gap-3 text-amber-600 mb-2">
                 <ShieldCheck size={20} />
-                <span className="text-xs font-bold uppercase tracking-widest">Secure Spot Reservation</span>
+                <span className="text-xs font-bold uppercase tracking-widest">Secure Course Enrollment</span>
               </div>
               <h2 className="text-3xl font-['Baloo_2'] font-bold text-amber-950">
                 {step === 1 ? 'Your Information' : 'Payment Details'}
               </h2>
               <div className="mt-4 p-4 rounded-2xl bg-amber-50 border border-amber-100 flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-amber-900/50 uppercase font-bold tracking-tight">Registering for:</p>
-                  <p className="font-['Baloo_2'] font-bold text-amber-900 line-clamp-1">{safeItem.name}</p>
+                  <p className="text-xs text-amber-900/50 uppercase font-bold tracking-tight">Enrolling in:</p>
+                  <p className="font-['Baloo_2'] font-bold text-amber-900 line-clamp-1">{course.name || course.title}</p>
+                  <p className="text-xs text-amber-600 mt-1">{course.duration} · {course.lessons} Lessons</p>
                 </div>
                 <div className="text-right text-amber-950 font-bold whitespace-nowrap ml-4">
-                  {safeItem.price}
+                  KES {course.price.toLocaleString()}
                 </div>
               </div>
             </div>
@@ -294,7 +265,7 @@ export default function AcademyRegistrationModal({ isOpen, onClose, item }: Moda
                       </>
                     ) : (
                       <>
-                        Confirm and Pay {safeItem.price}
+                        Confirm and Pay KES {course.price.toLocaleString()}
                         <ArrowRight size={20} />
                       </>
                     )}
@@ -317,9 +288,9 @@ export default function AcademyRegistrationModal({ isOpen, onClose, item }: Moda
               </div>
 
               <div className="space-y-2">
-                <h2 className="text-4xl font-['Baloo_2'] font-extrabold text-amber-950">Spot Secured!</h2>
+                <h2 className="text-4xl font-['Baloo_2'] font-extrabold text-amber-950">Enrollment Complete!</h2>
                 <p className="font-medium text-amber-900/60 px-6">
-                  You're officially enrolled in <span className="text-amber-600 font-bold">{safeItem.name}</span>! 
+                  You're officially enrolled in <span className="text-amber-600 font-bold">{course.name || course.title}</span>! 
                   A confirmation email has been sent.
                 </p>
               </div>
@@ -330,12 +301,16 @@ export default function AcademyRegistrationModal({ isOpen, onClose, item }: Moda
                   <span className="font-bold text-amber-900 line-clamp-1">{formData.name}</span>
                 </div>
                 <div className="flex items-center justify-between border-b border-amber-200 pb-3">
-                  <span className="text-xs font-bold text-amber-950 uppercase">Course/Batch</span>
-                  <span className="font-bold text-amber-900">{safeItem.date}</span>
+                  <span className="text-xs font-bold text-amber-950 uppercase">Course</span>
+                  <span className="font-bold text-amber-900">{course.name || course.title}</span>
+                </div>
+                <div className="flex items-center justify-between border-b border-amber-200 pb-3">
+                  <span className="text-xs font-bold text-amber-950 uppercase">Duration</span>
+                  <span className="font-bold text-amber-900">{course.duration}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-amber-950 uppercase">Registration ID</span>
-                  <span className="font-bold text-amber-900">#JA-{Math.floor(Math.random() * 90000) + 10000}</span>
+                  <span className="text-xs font-bold text-amber-950 uppercase">Enrollment ID</span>
+                  <span className="font-bold text-amber-900">#JC-{Math.floor(Math.random() * 90000) + 10000}</span>
                 </div>
               </div>
 

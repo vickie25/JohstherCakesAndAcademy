@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Comic+Neue:wght@300;400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=DM+Sans:ital,wght@0,400..1000;1,400..1000&family=JetBrains+Mono:wght@400..800&display=swap');
 @import "tailwindcss";
 
 /* ─── Design Tokens ─── */
@@ -15,6 +16,91 @@
   --color-dark:       #1C0A00;
   --font-heading:     'Baloo 2', cursive;
   --font-body:        'Comic Neue', cursive;
+}
+
+/* ─── Admin Dashboard Theme (Warm Luxury Patisserie: Johsther Cakes & Academy) ─── */
+.admin-theme {
+  /* Color Palette */
+  --color-bg-base:        #FBF7F2;   /* Warm cream — primary background */
+  --color-bg-surface:     #FFFFFF;   /* Card / panel backgrounds */
+  --color-bg-deep:        #2C1A0E;   /* Deep espresso — sidebar */
+  --color-bg-muted:       #F3EDE4;   /* Subtle section fills */
+
+  --color-accent-primary: #C8884A;   /* Caramel gold — primary CTA */
+  --color-accent-rose:    #D4836A;   /* Dusty rose — secondary accent */
+  --color-accent-dark:    #8B4513;   /* Saddlebrown — hover states */
+
+  --color-text-primary:   #1C1007;   /* Near-black warm */
+  --color-text-secondary: #6B5240;   /* Muted cocoa */
+  --color-text-inverse:   #F9F4EE;   /* Sidebar text */
+  --color-text-placeholder: #B5A090;
+
+  --color-success:        #5A8A5E;   /* Sage green */
+  --color-warning:        #C8884A;   /* Reuse caramel */
+  --color-danger:         #B85050;   /* Deep rose-red */
+  --color-info:           #5B82A0;   /* Dusty blue */
+
+  --color-border:         #E8DDD0;   /* Warm light border */
+  --color-border-strong:  #C8B8A8;   /* Dividers */
+
+  /* Shadows */
+  --color-shadow:         rgba(44, 26, 14, 0.08);
+  --color-shadow-md:      rgba(44, 26, 14, 0.14);
+
+  --shadow-card:   0 1px 3px var(--color-shadow), 0 4px 12px var(--color-shadow);
+  --shadow-panel:  0 4px 16px var(--color-shadow-md);
+  --shadow-modal:  0 16px 48px rgba(44,26,14,0.22);
+  --shadow-btn:    0 2px 8px rgba(200, 136, 74, 0.30);
+
+  /* Typography */
+  --font-display: "Playfair Display", serif;
+  --font-body: "DM Sans", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+
+  /* Spacing */
+  --space-1:   4px;    --space-2:   8px;    --space-3:   12px;
+  --space-4:   16px;   --space-5:   20px;   --space-6:   24px;
+  --space-8:   32px;   --space-10:  40px;   --space-12:  48px;
+  --space-16:  64px;
+
+  /* Radii */
+  --radius-sm:  6px;
+  --radius-md:  10px;
+  --radius-lg:  16px;
+  --radius-xl:  24px;
+  --radius-full: 9999px;
+
+  /* Variable overwrites (Shadcn compatibility mapping just in case we need generic components) */
+  --background: var(--color-bg-base);
+  --foreground: var(--color-text-primary);
+  --card: var(--color-bg-surface);
+  --card-foreground: var(--color-text-primary);
+  --popover: var(--color-bg-surface);
+  --popover-foreground: var(--color-text-primary);
+  --primary: var(--color-accent-primary);
+  --primary-foreground: #FFFFFF;
+  --secondary: var(--color-bg-muted);
+  --secondary-foreground: var(--color-text-primary);
+  --muted: var(--color-bg-muted);
+  --muted-foreground: var(--color-text-secondary);
+  --accent: var(--color-bg-muted);
+  --accent-foreground: var(--color-text-primary);
+  --destructive: var(--color-danger);
+  --destructive-foreground: #FFFFFF;
+  --border: var(--color-border);
+  --input: var(--color-border);
+  --ring: var(--color-accent-primary);
+  --radius: var(--radius-sm);
+
+  /* Base theme application */
+  background-color: var(--color-bg-base) !important;
+  color: var(--color-text-primary) !important;
+  font-family: var(--font-body) !important;
+}
+
+.admin-theme h1, .admin-theme h2, .admin-theme h3, .admin-theme h4, .admin-theme h5, .admin-theme h6 {
+  font-family: var(--font-display) !important;
+  color: var(--color-text-primary);
 }
 
 html {

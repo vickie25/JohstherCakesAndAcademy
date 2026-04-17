@@ -1,63 +1,77 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useCart } from '../context/CartContext';
 import { useNavigation } from '../context/NavigationContext';
+import { apiRequest, formatCurrency } from '../lib/api';
 
 const categories = ['All', 'Wedding', 'Birthday', 'Custom', 'Academy'];
 
-const cakes = [
+interface Cake {
+  id: number;
+  name?: string;
+  title?: string;
+  category: string;
+  description?: string;
+  desc?: string;
+  price: number;
+  image_url?: string;
+  image?: string;
+  tag: string;
+}
+
+const MOCK_CAKES: Cake[] = [
   {
     id: 1,
-    name: 'Elegant Wedding Cake',
-    category: 'Wedding',
-    description: 'Tiered masterpiece with fondant flowers',
-    price: 'From KES 8,500',
-    image: '/hero_cake_elegant.png',
-    tag: 'Best Seller',
+    name: 'Midnight Truffle Symphony',
+    category: 'Birthday',
+    description: 'Triple-layered dark Belgian chocolate with a silky smooth ganache finish.',
+    price: 4500,
+    image_url: '/hero_cake_elegant.png',
+    tag: 'Luxury',
   },
   {
     id: 2,
-    name: 'Red Velvet Delight',
+    name: 'Royal Red Velvet Pearl',
     category: 'Birthday',
-    description: 'Velvety layers with cream cheese frosting',
-    price: 'From KES 3,200',
-    image: '/red_velvet_cake.png',
-    tag: 'Popular',
+    description: 'Our signature crimson cocoa layers with Madagascar vanilla cream cheese frost.',
+    price: 3200,
+    image_url: '/red_velvet_cake.png',
+    tag: 'Signature',
   },
   {
     id: 3,
-    name: 'Custom Celebration',
+    name: 'Golden Orchard Delight',
     category: 'Custom',
-    description: 'Your dream cake, made to perfection',
-    price: 'From KES 4,000',
-    image: '/hero-cake.png',
-    tag: 'Custom',
+    description: 'Moist vanilla bean layers filled with fresh passion fruit curd and citrus zest.',
+    price: 4000,
+    image_url: '/hero-cake.png',
+    tag: 'Fresh',
   },
   {
     id: 4,
-    name: "Baker's Special",
-    category: 'Birthday',
-    description: 'Classic flavours with a modern twist',
-    price: 'From KES 2,800',
-    image: '/hero_baker.png',
-    tag: 'New',
+    name: 'Antique Lace Wedding',
+    category: 'Wedding',
+    description: 'Exquisite three-tier masterpiece with hand-sculpted sugar flowers.',
+    price: 15500,
+    image_url: '/hero_cake_elegant.png',
+    tag: 'Wedding',
   },
   {
     id: 5,
-    name: 'Academy Signature',
-    category: 'Academy',
-    description: 'Made by our top students in class',
-    price: 'From KES 2,500',
-    image: '/academy-class.png',
-    tag: 'Student Made',
+    name: "Baker's Choice Selection",
+    category: 'Birthday',
+    description: 'Seasonal assortment of our finest sponge and buttercream combinations.',
+    price: 2800,
+    image_url: '/hero_baker.png',
+    tag: 'Classic',
   },
   {
     id: 6,
-    name: 'Royal Wedding Tier',
-    category: 'Wedding',
-    description: 'Multi-tier with gold leaf accents',
-    price: 'From KES 12,000',
-    image: '/hero_cake_elegant.png',
-    tag: 'Premium',
+    name: 'Petite Artisan Treats',
+    category: 'Academy',
+    description: 'Curated selection of gourmet cupcakes and tarts from our academy laboratory.',
+    price: 1800,
+    image_url: '/academy-class.png',
+    tag: 'Academy',
   },
 ];
 
@@ -72,22 +86,70 @@ const tagColors: Record<string, { bg: string; color: string }> = {
 
 export default function CakesShowcase() {
   const [active, setActive] = useState('All');
+  const [cakes, setCakes] = useState<Cake[]>(MOCK_CAKES);
+  const [loading, setLoading] = useState(false);
   const ref = useRef<HTMLElement>(null);
   const { items, addToCart, updateQuantity } = useCart();
   const { goToCakes } = useNavigation();
 
-  const filtered = active === 'All' ? cakes : cakes.filter(c => c.category === active);
+  const featuredCakes = useMemo(() => {
+    const filtered = active === 'All' 
+      ? cakes 
+      : cakes.filter(c => c.category?.toLowerCase() === active.toLowerCase());
+    return filtered.slice(0, 6);
+  }, [cakes, active]);
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+
+    const fetchCakes = async () => {
+      try {
+        const { data } = await apiRequest<Cake[]>('/cakes');
+        if (data && data.length > 0) {
+          setCakes(data);
+        }
+      } catch (err) {
+        // Silently stay with dummy data
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCakes();
+
     const obs = new IntersectionObserver(
-      entries => entries.forEach(e => e.isIntersecting && e.target.classList.add('visible')),
-      { threshold: 0.1 }
+      entries => {
+        entries.forEach(e => {
+          if (e.isIntersecting) {
+            e.target.classList.add('visible');
+            obs.unobserve(e.target);
+          }
+        });
+      },
+      { threshold: 0.1, rootMargin: '50px' }
     );
-    el.querySelectorAll('.fade-up').forEach(el => obs.observe(el));
-    return () => obs.disconnect();
-  }, []);
+
+    // Dynamic observation: observe all current and future fade-up elements
+    const observer = new MutationObserver(() => {
+      el.querySelectorAll('.fade-up:not(.observed)').forEach(item => {
+        item.classList.add('observed');
+        obs.observe(item);
+      });
+    });
+
+    observer.observe(el, { childList: true, subtree: true });
+    
+    // Initial trigger
+    el.querySelectorAll('.fade-up').forEach(item => {
+      item.classList.add('observed');
+      obs.observe(item);
+    });
+
+    return () => {
+      obs.disconnect();
+      observer.disconnect();
+    };
+  }, [cakes]); // Re-run observation setup when cakes changes
 
   return (
     <section id="cakes" ref={ref} style={{ padding: '100px 0', background: '#FFFBEB', position: 'relative', overflow: 'hidden' }}>
@@ -144,13 +206,19 @@ export default function CakesShowcase() {
           ))}
         </div>
 
-        {/* Grid */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-          gap: '28px',
-        }}>
-          {filtered.map((cake, i) => {
+        {/* Grid or Loading */}
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-20">
+            <div className="w-12 h-12 border-4 border-amber-200 border-t-amber-500 rounded-full animate-spin mb-4"></div>
+            <p className="font-['Baloo_2'] font-bold text-[#78350F]">Warming up the collection...</p>
+          </div>
+        ) : (
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+            gap: '28px',
+          }}>
+            {featuredCakes.map((cake, i) => {
             const tagStyle = tagColors[cake.tag] ?? { bg: '#F59E0B', color: '#fff' };
             return (
               <article
@@ -168,8 +236,8 @@ export default function CakesShowcase() {
                 {/* Image */}
                 <div style={{ position: 'relative', overflow: 'hidden', height: '220px' }}>
                   <img
-                    src={cake.image}
-                    alt={cake.name}
+                    src={cake.image_url || cake.image}
+                    alt={cake.name || cake.title || 'Johsther Cake'}
                     style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.4s ease' }}
                     onMouseEnter={e => (e.currentTarget.style.transform = 'scale(1.06)')}
                     onMouseLeave={e => (e.currentTarget.style.transform = 'scale(1)')}
@@ -192,14 +260,14 @@ export default function CakesShowcase() {
                 {/* Content */}
                 <div style={{ padding: '20px 22px 24px' }}>
                   <h3 style={{ fontFamily: "'Baloo 2', cursive", fontWeight: 700, fontSize: '1.15rem', color: '#78350F', marginBottom: '6px' }}>
-                    {cake.name}
+                    {cake.name || cake.title}
                   </h3>
                   <p style={{ fontFamily: "'Comic Neue', cursive", color: '#A16207', fontSize: '0.9rem', marginBottom: '16px', lineHeight: 1.5 }}>
-                    {cake.description}
+                    {cake.description || cake.desc}
                   </p>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ fontFamily: "'Baloo 2', cursive", fontWeight: 800, color: '#92400E', fontSize: '1rem' }}>
-                      {cake.price}
+                      {formatCurrency(cake.price || 0)}
                     </span>
                     {items.find(i => i.id === cake.id) ? (() => {
                       const cartItem = items.find(i => i.id === cake.id)!;
@@ -216,10 +284,10 @@ export default function CakesShowcase() {
                           e.stopPropagation();
                           addToCart({
                             id: cake.id,
-                            name: cake.name,
-                            priceNum: parseInt(cake.price.replace(/\D/g, ''), 10) || 0,
-                            priceStr: cake.price,
-                            image: cake.image
+                            name: cake.name || cake.title || 'Custom Cake',
+                            priceNum: cake.price,
+                            priceStr: formatCurrency(cake.price),
+                            image: cake.image_url || cake.image || ''
                           });
                         }}
                         style={{
@@ -247,6 +315,7 @@ export default function CakesShowcase() {
             );
           })}
         </div>
+        )}
 
         {/* CTA */}
         <div className="fade-up" style={{ textAlign: 'center', marginTop: '60px' }}>
@@ -259,20 +328,21 @@ export default function CakesShowcase() {
               fontFamily: "'Baloo 2', cursive",
               fontWeight: 700,
               fontSize: '1rem',
-              background: 'transparent',
-              color: '#92400E',
-              border: '2.5px solid #92400E',
-              padding: '14px 36px',
+              background: '#92400E',
+              color: '#fff',
+              border: 'none',
+              padding: '16px 48px',
               borderRadius: '999px',
               textDecoration: 'none',
               transition: 'all 0.2s',
               display: 'inline-block',
               cursor: 'pointer',
+              boxShadow: '0 8px 30px rgba(146, 64, 14, 0.2)'
             }}
-            onMouseEnter={e => { (e.currentTarget).style.background = '#92400E'; (e.currentTarget).style.color = '#fff'; }}
-            onMouseLeave={e => { (e.currentTarget).style.background = 'transparent'; (e.currentTarget).style.color = '#92400E'; }}
+            onMouseEnter={e => { (e.currentTarget).style.transform = 'translateY(-2px)'; (e.currentTarget).style.boxShadow = '0 12px 40px rgba(146, 64, 14, 0.3)'; }}
+            onMouseLeave={e => { (e.currentTarget).style.transform = 'translateY(0)'; (e.currentTarget).style.boxShadow = '0 8px 30px rgba(146, 64, 14, 0.2)'; }}
           >
-            Design Your Custom Cake →
+            Explore Full Boutique →
           </button>
         </div>
       </div>

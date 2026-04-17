@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigation } from '../context/NavigationContext';
-import { Lock, ShieldCheck, ArrowRight, User, Key, AlertCircle, Loader2 } from 'lucide-react';
+import { AlertCircle, Loader2, Cake, Eye, EyeOff } from 'lucide-react';
+import { apiRequest } from '../lib/api';
 
 export default function AdminLoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { goToAdminDashboard, goToHome } = useNavigation();
@@ -14,128 +16,123 @@ export default function AdminLoginPage() {
     setIsLoading(true);
     setError('');
 
-    try {
-      const response = await fetch('http://localhost:5000/api/auth/admin-login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-      });
+    const { data, error } = await apiRequest<{ token: string; user: any }>('/auth/admin-login', {
+      method: 'POST',
+      useAuth: false,
+      body: JSON.stringify({ username, password }),
+    });
 
-      const data = await response.json();
-
-      if (data.success) {
-        localStorage.setItem('admin_token', data.data.token);
-        localStorage.setItem('admin_user', JSON.stringify(data.data.user));
-        goToAdminDashboard();
-      } else {
-        setError(data.message || 'Invalid credentials');
-      }
-    } catch (err) {
-      setError('Connection failed. Is the server running?');
-    } finally {
-      setIsLoading(false);
+    if (data) {
+      localStorage.setItem('admin_token', data.token);
+      localStorage.setItem('admin_user', JSON.stringify(data.user));
+      goToAdminDashboard();
+    } else {
+      setError(error || 'Invalid credentials');
     }
+    setIsLoading(false);
   };
 
   return (
-    <div className="min-h-screen bg-[#FFFBEB] flex flex-col justify-center items-center p-6 relative overflow-hidden pt-24">
-      {/* Background Decorative Elements */}
-      <div className="absolute top-0 left-0 w-96 h-96 bg-amber-500/5 blur-[120px] rounded-full -translate-x-1/2 -translate-y-1/2"></div>
-      <div className="absolute bottom-0 right-0 w-96 h-96 bg-amber-950/5 blur-[120px] rounded-full translate-x-1/2 translate-y-1/2"></div>
-
-      <div className="w-full max-w-md relative z-10">
-        <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-amber-950 text-amber-500 mb-6 shadow-2xl shadow-amber-950/20 transform hover:scale-110 transition-transform duration-500">
-            <Lock size={40} />
+    <div className="flex min-h-screen bg-[var(--color-bg-base)] admin-theme">
+      
+      {/* Left Panel - Brand */}
+      <div className="hidden lg:flex w-[45%] bg-[var(--color-bg-deep)] relative flex-col justify-between p-12 overflow-hidden">
+        {/* Decorative subtle pattern */}
+        <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: "url('data:image/svg+xml;utf8,<svg width=\"20\" height=\"20\" viewBox=\"0 0 20 20\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"2\" cy=\"2\" r=\"2\" fill=\"%23FFFFFF\"/></svg>')", backgroundSize: "20px 20px" }}></div>
+        
+        <div className="relative z-10">
+          <div className="flex items-center gap-3 mb-4">
+            <Cake size={32} className="text-[var(--color-accent-primary)]" strokeWidth={1.5} />
+            <span className="font-display text-4xl text-[var(--color-bg-base)]">Johsther</span>
           </div>
-          <h1 className="text-4xl font-['Baloo_2'] font-extrabold text-amber-950 mb-2">Admin Portal</h1>
-          <p className="text-amber-900/60 font-['Comic_Neue'] font-bold uppercase tracking-widest text-xs">
-            Johsther Cakes & Academy
-          </p>
+          <p className="text-[var(--color-text-secondary)] text-[14px]">Cakes & Academy Management</p>
         </div>
 
-        <div className="bg-white/80 backdrop-blur-2xl rounded-[40px] border-2 border-amber-100 p-8 md:p-10 shadow-2xl relative">
-          <div className="absolute top-0 right-10 -translate-y-1/2">
-             <div className="bg-amber-500 text-amber-950 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-2 shadow-lg">
-                <ShieldCheck size={14} />
-                SECURE ACCESS
-             </div>
+        <div className="mx-auto my-auto relative z-10 w-full max-w-[300px] aspect-square flex items-center justify-center opacity-80">
+          <div className="absolute inset-0 border border-[var(--color-accent-primary)] rounded-full animate-[spin_60s_linear_infinite]" />
+          <div className="absolute inset-4 border border-[var(--color-text-secondary)] rounded-full border-dashed animate-[spin_40s_linear_infinite_reverse]" />
+          <Cake size={100} className="text-[var(--color-accent-primary)] mix-blend-screen" strokeWidth={1} />
+        </div>
+
+        <div className="relative z-10 text-[12px] text-[var(--color-text-secondary)] w-full text-center">
+          Warm Luxury Patisserie · Established 2024
+        </div>
+      </div>
+
+      {/* Right Panel - Form */}
+      <div className="flex-1 flex flex-col justify-center items-center p-6 relative">
+        <button 
+          onClick={goToHome}
+          className="absolute top-8 right-8 text-[13px] font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
+        >
+          Return to Site
+        </button>
+
+        <div className="w-full max-w-[420px]">
+          <div className="mb-10">
+            <h1 className="font-display text-[34px] font-bold text-[var(--color-text-primary)] mb-2">Welcome back 👋</h1>
+            <p className="text-[14px] text-[var(--color-text-secondary)]">Admin portal — Johsther Cakes & Academy</p>
           </div>
 
-          <form onSubmit={handleLogin} className="space-y-6">
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-amber-950 uppercase ml-1 flex items-center gap-2">
-                <User size={14} className="text-amber-500" />
-                Username
-              </label>
+          <form onSubmit={handleLogin} className="space-y-5">
+            <div className="space-y-1">
+              <label className="text-[13px] font-semibold text-[var(--color-text-primary)] block">Username</label>
               <input 
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="Manager ID"
-                className="w-full h-14 px-6 bg-white border-2 border-amber-100 rounded-2xl outline-none focus:border-amber-500 transition-all font-medium placeholder:text-amber-900/20"
+                className="w-full h-[48px] px-4 bg-white border border-[var(--color-border)] rounded-[6px] outline-none focus:border-[var(--color-accent-primary)] focus:ring-[3px] focus:ring-[var(--color-accent-primary)]/15 transition-all text-[14px]"
                 required
               />
             </div>
 
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-amber-950 uppercase ml-1 flex items-center gap-2">
-                <Key size={14} className="text-amber-500" />
-                Access Key
+            <div className="space-y-1 relative">
+              <label className="text-[13px] font-semibold text-[var(--color-text-primary)] flex justify-between">
+                <span>Password</span>
+                <span className="text-[var(--color-accent-primary)] cursor-pointer hover:underline text-[12px]">Forgot password?</span>
               </label>
-              <input 
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full h-14 px-6 bg-white border-2 border-amber-100 rounded-2xl outline-none focus:border-amber-500 transition-all font-medium placeholder:text-amber-900/20"
-                required
-              />
+              <div className="relative">
+                <input 
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full h-[48px] px-4 pr-12 bg-white border border-[var(--color-border)] rounded-[6px] outline-none focus:border-[var(--color-accent-primary)] focus:ring-[3px] focus:ring-[var(--color-accent-primary)]/15 transition-all text-[14px]"
+                  required
+                />
+                <button 
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
             </div>
 
             {error && (
-              <div className="p-4 bg-red-50 border-2 border-red-100 rounded-2xl flex items-center gap-3 text-red-600 animate-[shake_0.5s_ease-in-out]">
-                <AlertCircle size={20} />
-                <p className="text-sm font-bold">{error}</p>
+              <div className="p-3 bg-[var(--color-danger)]/10 border border-[var(--color-danger)]/20 rounded-[6px] flex items-center gap-2 text-[var(--color-danger)]">
+                <AlertCircle size={16} className="shrink-0" />
+                <p className="text-[13px] font-medium">{error}</p>
               </div>
             )}
 
             <button 
               type="submit"
               disabled={isLoading}
-              className="w-full h-16 bg-amber-950 text-white rounded-2xl font-['Baloo_2'] font-bold text-lg flex items-center justify-center gap-3 hover:bg-amber-900 transition-all shadow-xl shadow-amber-950/20 active:scale-95 disabled:opacity-50 group"
+              className="w-full h-[44px] mt-2 bg-[var(--color-accent-primary)] text-white rounded-[6px] font-medium text-[15px] flex items-center justify-center gap-2 hover:bg-[var(--color-accent-dark)] transition-colors shadow-sm disabled:opacity-70 disabled:cursor-not-allowed"
+              style={{ boxShadow: 'var(--shadow-btn)' }}
             >
               {isLoading ? (
-                <Loader2 className="animate-spin" size={24} />
+                <Loader2 className="animate-spin" size={20} />
               ) : (
-                <>
-                  Unlock Dashboard
-                  <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
-                </>
+                'Sign In'
               )}
             </button>
           </form>
-
-          <p className="mt-8 text-center text-[10px] text-amber-900/40 font-bold uppercase tracking-widest leading-relaxed px-10">
-            Unauthorized access to this portal is strictly prohibited and monitored.
-          </p>
         </div>
-
-        <button 
-          onClick={goToHome}
-          className="mt-8 text-amber-950/60 hover:text-amber-950 font-bold text-sm transition-colors block mx-auto hover:underline"
-        >
-          &larr; Return to Public Site
-        </button>
       </div>
-
-      <style>{`
-        @keyframes shake {
-          0%, 100% { transform: translateX(0); }
-          25% { transform: translateX(-5px); }
-          75% { transform: translateX(5px); }
-        }
-      `}</style>
     </div>
   );
 }

@@ -1,4 +1,43 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import AcademyRegistrationModal from './AcademyRegistrationModal';
+import { apiRequest } from '../lib/api';
+import { ChefHat, Users, Award, BookOpen, Clock, Calendar } from 'lucide-react';
+
+interface Batch {
+  id: number;
+  name: string;
+  start_date: string;
+  price: number;
+  status: string;
+  status_color?: string;
+}
+
+const FALLBACK_BATCHES: Batch[] = [
+  {
+    id: 1,
+    name: 'Artisan Bread & Pastry Intensive',
+    start_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+    price: 25000,
+    status: 'Opening Soon',
+    status_color: 'bg-green-100 text-green-800',
+  },
+  {
+    id: 2,
+    name: 'Advanced Wedding Cake Architecture',
+    start_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+    price: 45000,
+    status: 'Few Spots Left',
+    status_color: 'bg-amber-100 text-amber-800',
+  },
+  {
+    id: 3,
+    name: 'Commercial Baking & Management',
+    start_date: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString(),
+    price: 35000,
+    status: 'Accepting Students',
+    status_color: 'bg-blue-100 text-blue-800',
+  },
+];
 
 const features = [
   {
@@ -57,8 +96,24 @@ const features = [
   },
 ];
 
+import { useNavigation } from '../context/NavigationContext';
+
 export default function Academy() {
   const ref = useRef<HTMLElement>(null);
+  const { goToAcademy } = useNavigation();
+  const [batches, setBatches] = useState<Batch[]>(FALLBACK_BATCHES);
+  const [loading, setLoading] = useState(false);
+  const [selectedBatch, setSelectedBatch] = useState<any>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const openRegistration = (batch: Batch) => {
+    setSelectedBatch({
+      name: batch.name,
+      date: new Date(batch.start_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+      price: `KES ${Number(batch.price).toLocaleString()}`
+    });
+    setIsModalOpen(true);
+  };
 
   useEffect(() => {
     const el = ref.current;
@@ -68,6 +123,21 @@ export default function Academy() {
       { threshold: 0.1 }
     );
     el.querySelectorAll('.fade-up').forEach(el => obs.observe(el));
+
+    const fetchBatches = async () => {
+      try {
+        const { data, error } = await apiRequest<Batch[]>('/academy/batches');
+        if (data && data.length > 0) {
+          setBatches(data.slice(0, 3));
+        }
+      } catch {
+        // Silently stay with dummy data
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchBatches();
+
     return () => obs.disconnect();
   }, []);
 
@@ -200,13 +270,14 @@ export default function Academy() {
                   fontWeight: 700,
                   background: '#F59E0B',
                   color: '#1C0A00',
-                  padding: '13px 30px',
+                  padding: '13px 40px',
                   borderRadius: '999px',
                   textDecoration: 'none',
-                  fontSize: '0.95rem',
-                  boxShadow: '0 8px 20px rgba(245,158,11,0.4)',
+                  fontSize: '1rem',
+                  boxShadow: '0 8px 25px rgba(245,158,11,0.4)',
                   transition: 'all 0.2s',
                   cursor: 'pointer',
+                  display: 'inline-block'
                 }}
                 onMouseEnter={e => { (e.currentTarget).style.transform = 'translateY(-2px)'; }}
                 onMouseLeave={e => { (e.currentTarget).style.transform = 'translateY(0)'; }}
@@ -242,6 +313,7 @@ export default function Academy() {
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
           gap: '20px',
+          marginBottom: '72px',
         }}>
           {features.map((f, i) => (
             <div
@@ -273,7 +345,99 @@ export default function Academy() {
             </div>
           ))}
         </div>
+
+        {/* Course Showcase Section */}
+        <div className="fade-up" style={{ textAlign: 'center', marginBottom: '48px' }}>
+          <h2 style={{
+            fontFamily: "'Baloo 2', cursive",
+            fontWeight: 800,
+            fontSize: 'clamp(1.8rem, 3.5vw, 2.8rem)',
+            color: '#FEF3C7',
+            marginBottom: '16px',
+          }}>
+            Upcoming <span style={{ color: '#F59E0B' }}>Physical</span> Intakes
+          </h2>
+          <p style={{ fontFamily: "'Comic Neue', cursive", fontSize: '1.05rem', color: '#FDE68A', maxWidth: '520px', margin: '0 auto 40px' }}>
+             Join our hands-on classroom experience in Nairobi. Real equipment, real ingredients, real results.
+          </p>
+        </div>
+
+        <div className="space-y-4 max-w-3xl mx-auto">
+          {loading ? (
+            <div style={{ padding: '60px 0', textAlign: 'center' }}>
+              <div className="w-12 h-12 border-4 border-amber-200 border-t-amber-500 rounded-full animate-spin mx-auto mb-4"></div>
+              <p className="font-['Baloo_2'] font-bold text-amber-100">Checking our calendar...</p>
+            </div>
+          ) : batches.length === 0 ? (
+             <p className="text-center py-10 font-bold text-amber-200/40">No upcoming intakes scheduled at the moment.</p>
+          ) : batches.map((batch) => (
+            <div 
+              key={batch.id} 
+              className="fade-up flex flex-col md:flex-row md:items-center justify-between p-6 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors group"
+            >
+              <div className="mb-4 md:mb-0 text-left">
+                <div className="flex items-center gap-2 text-amber-400 font-bold mb-1">
+                  <Calendar size={18} />
+                  <span>{new Date(batch.start_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
+                </div>
+                <p className="text-xl font-['Baloo_2'] font-bold text-white group-hover:text-amber-400 transition-colors">{batch.name}</p>
+              </div>
+              <div className="flex items-center gap-6">
+                 <div className="text-right hidden sm:block">
+                    <p className="text-2xl font-['Baloo_2'] font-extrabold text-[#FEF3C7]">KES {batch.price.toLocaleString()}</p>
+                    <p className="text-[10px] text-amber-200/60 uppercase font-black tracking-widest">All Inclusive</p>
+                 </div>
+                <button 
+                  onClick={() => openRegistration(batch)}
+                  className="px-8 py-3 bg-amber-500 text-amber-950 rounded-xl font-bold text-sm hover:bg-amber-400 transition-colors active:scale-95 shadow-lg shadow-amber-500/20"
+                >
+                  Book Seat
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* View all courses link */}
+        <div className="fade-up" style={{ textAlign: 'center', marginTop: '40px' }}>
+          <button
+            onClick={() => {
+              goToAcademy();
+              window.scrollTo({ top: 0, behavior: 'instant' });
+            }}
+            style={{
+              fontFamily: "'Baloo 2', cursive",
+              fontWeight: 700,
+              background: 'transparent',
+              color: '#FEF3C7',
+              padding: '12px 32px',
+              borderRadius: '999px',
+              textDecoration: 'none',
+              border: '2px solid #FEF3C7',
+              fontSize: '1rem',
+              transition: 'all 0.2s',
+              cursor: 'pointer',
+              display: 'inline-block',
+            }}
+            onMouseEnter={e => { 
+              (e.currentTarget as HTMLButtonElement).style.background = '#FEF3C7'; 
+              (e.currentTarget as HTMLButtonElement).style.color = '#78350F'; 
+            }}
+            onMouseLeave={e => { 
+              (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; 
+              (e.currentTarget as HTMLButtonElement).style.color = '#FEF3C7'; 
+            }}
+          >
+            Explore Academy Campus →
+          </button>
+        </div>
       </div>
+
+      <AcademyRegistrationModal 
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        item={selectedBatch}
+      />
 
       <style>{`
         @media (max-width: 768px) {

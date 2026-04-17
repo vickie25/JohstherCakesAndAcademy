@@ -1,0 +1,25 @@
+{
+  "name": "update profile",
+  "request": {
+    "type": "http",
+    "url": "http://localhost:5000/api/users/profile",
+    "scripts": {
+      "preRequest": "",
+      "postResponse": ""
+    },
+    "method": "PUT",
+    "queryParams": [],
+    "headers": [],
+    "body": "{\n  \"name\": \"jonh\"\n}",
+    "contentType": "application/json",
+    "auth": {
+      "currentAuthType": "BEARER_TOKEN",
+      "authConfigStore": {
+        "BEARER_TOKEN": {
+          "bearer": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjcsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc3NjM2MDk3NSwiZXhwIjoxNzc2OTY1Nzc1fQ.dVzHWtKbMVjmNX9ZmL52NpVouPZO8nZJA2snAi9tm0k"
+        }
+      }
+    }
+  },
+  "rank": "auntit17763610763621"
+}

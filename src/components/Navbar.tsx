@@ -9,7 +9,7 @@ const navLinks = [
   { label: 'Academy',   href: '#academy' },
   { label: 'Courses',   href: '#courses' },
   { label: 'About Us',  href: '#about' },
-  { label: 'Contact',   href: '#contact' },
+  { label: 'Contact',   href: '/contact' },
 ];
 
 export default function Navbar() {
@@ -18,7 +18,7 @@ export default function Navbar() {
 
   const { user, logout, openAuthModal } = useAuth();
   const { totalItems, setIsCartOpen } = useCart();
-  const { currentPage, goToHome, goToCakes, goToAcademy, goToCourses, goToAbout } = useNavigation();
+  const { currentPage, goToHome, goToCakes, goToAcademy, goToCourses, goToAbout, goToContact } = useNavigation();
 
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, label: string, href: string) => {
     if (label === 'Our Cakes') {
@@ -36,6 +36,10 @@ export default function Navbar() {
     } else if (label === 'About Us') {
       e.preventDefault();
       goToAbout();
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    } else if (label === 'Contact') {
+      e.preventDefault();
+      goToContact();
       window.scrollTo({ top: 0, behavior: 'instant' });
     } else if (currentPage !== 'home' && href.startsWith('#')) {
       goToHome();

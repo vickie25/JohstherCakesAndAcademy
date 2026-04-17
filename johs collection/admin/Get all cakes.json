@@ -1,0 +1,21 @@
+{
+  "name": "Get all cakes",
+  "request": {
+    "type": "http",
+    "url": "http://localhost:5000/api",
+    "scripts": {
+      "preRequest": "",
+      "postResponse": ""
+    },
+    "method": "GET",
+    "queryParams": [],
+    "headers": [],
+    "body": "",
+    "contentType": "text/plain",
+    "auth": {
+      "currentAuthType": "INHERIT",
+      "authConfigStore": {}
+    }
+  },
+  "rank": "auntit17763612454631"
+}

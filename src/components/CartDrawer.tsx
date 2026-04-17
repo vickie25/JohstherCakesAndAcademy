@@ -18,7 +18,7 @@ export default function CartDrawer() {
     }
   };
 
-  if (!isCartOpen || currentPage !== 'home') return null;
+  if (!isCartOpen) return null;
 
   return (
     <>
@@ -77,7 +77,14 @@ export default function CartDrawer() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               {items.map(item => (
                 <div key={item.id} style={{ display: 'flex', gap: '16px', background: '#fff', padding: '12px', borderRadius: '16px', border: '1.5px solid #F5E6C8' }}>
-                  <img src={item.image} alt={item.name} style={{ width: 72, height: 72, objectFit: 'cover', borderRadius: '10px' }} />
+                  <img 
+                    src={item.image} 
+                    alt={item.name} 
+                    style={{ width: 72, height: 72, objectFit: 'cover', borderRadius: '10px' }}
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = '/hero-cake.png'; // Fallback image
+                    }}
+                  />
                   <div style={{ flex: 1 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                       <h4 style={{ margin: '0 0 4px', fontFamily: "'Baloo 2', cursive", fontWeight: 700, color: '#78350F', fontSize: '1rem', lineHeight: 1.2 }}>{item.name}</h4>

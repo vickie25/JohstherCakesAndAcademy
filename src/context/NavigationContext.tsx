@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, type ReactNode } from 'react';
 
-type PageView = 'home' | 'checkout' | 'cakes' | 'academy' | 'courses' | 'about' | 'admin-login' | 'admin-dashboard';
+type PageView = 'home' | 'checkout' | 'cakes' | 'academy' | 'courses' | 'about' | 'contact' | 'admin-login' | 'admin-dashboard';
 
 interface NavigationContextType {
   currentPage: PageView;
@@ -10,6 +10,7 @@ interface NavigationContextType {
   goToAcademy: () => void;
   goToCourses: () => void;
   goToAbout: () => void;
+  goToContact: () => void;
   goToAdminLogin: () => void;
   goToAdminDashboard: () => void;
 }
@@ -25,6 +26,7 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
   const goToAcademy = () => setCurrentPage('academy');
   const goToCourses = () => setCurrentPage('courses');
   const goToAbout = () => setCurrentPage('about');
+  const goToContact = () => setCurrentPage('contact');
   const goToAdminLogin = () => setCurrentPage('admin-login');
   const goToAdminDashboard = () => setCurrentPage('admin-dashboard');
 
@@ -37,6 +39,7 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
       goToAcademy, 
       goToCourses, 
       goToAbout,
+      goToContact,
       goToAdminLogin,
       goToAdminDashboard
     }}>

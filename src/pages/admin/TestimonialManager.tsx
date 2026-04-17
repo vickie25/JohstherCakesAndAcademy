@@ -1,8 +1,28 @@
 import { useState, useEffect } from 'react';
 import { 
   MessageCircle, Star, Search, Filter, Plus, Edit2, Trash2, 
-  MoreVertical, CheckCircle2, ShieldCheck, Loader2
+  MoreVertical, CheckCircle2, ShieldCheck, Loader2, AlertCircle,
+  TrendingUp, Users, Award, Clock
 } from 'lucide-react';
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { cn } from "@/lib/utils";
+import { apiRequest } from '@/lib/api';
+
+const MOCK_TESTIMONIALS: Testimonial[] = [
+  { id: 1, name: 'Mercy Njeri', role: 'Home Baker', content: 'Johsther Academy changed my life! The advanced baking course was intense but rewarding.', rating: 5, image_url: '', is_featured: true, is_active: true, created_at: new Date().toISOString() },
+  { id: 2, name: 'David Maina', role: 'Entrepreneur', content: 'Best cakes in Nairobi, hands down. The Victorian Velvet is a masterpiece.', rating: 5, image_url: '', is_featured: false, is_active: true, created_at: new Date().toISOString() },
+];
 
 interface Testimonial {
   id: number;
@@ -24,17 +44,16 @@ export default function TestimonialManager() {
   const fetchTestimonials = async () => {
     try {
       setLoading(true);
-      const res = await fetch('http://localhost:5000/api/testimonials?active=false', {
-        headers: {
-           'Authorization': `Bearer ${localStorage.getItem('admin_token')}`
-        }
-      });
-      const data = await res.json();
-      if (data.success) {
-        setTestimonials(data.data);
+      const { data, error } = await apiRequest<Testimonial[]>('/testimonials?active=false');
+      if (data) {
+        setTestimonials(data);
+      } else if (error) {
+        console.warn('Backend connection failed, using mock testimonials:', error);
+        setTestimonials(MOCK_TESTIMONIALS);
       }
     } catch (error) {
-      console.error('Error fetching testimonials:', error);
+      console.error('Error in fetchTestimonials:', error);
+      setTestimonials(MOCK_TESTIMONIALS);
     } finally {
       setLoading(false);
     }
@@ -45,56 +64,25 @@ export default function TestimonialManager() {
   }, []);
 
   const handleToggleActive = async (id: number, currentData: Testimonial) => {
-    try {
-      const res = await fetch(`http://localhost:5000/api/testimonials/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('admin_token')}`
-        },
-        body: JSON.stringify({ ...currentData, is_active: !currentData.is_active })
-      });
-      if ((await res.json()).success) {
-        fetchTestimonials();
-      }
-    } catch (error) {
-      console.error('Error toggling testimonial:', error);
-    }
+    const { data } = await apiRequest(`/testimonials/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify({ ...currentData, is_active: !currentData.is_active })
+    });
+    if (data) fetchTestimonials();
   };
 
   const handleToggleFeatured = async (id: number, currentData: Testimonial) => {
-    try {
-      const res = await fetch(`http://localhost:5000/api/testimonials/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('admin_token')}`
-        },
-        body: JSON.stringify({ ...currentData, is_featured: !currentData.is_featured })
-      });
-      if ((await res.json()).success) {
-        fetchTestimonials();
-      }
-    } catch (error) {
-      console.error('Error toggling featured:', error);
-    }
-  }
+    const { data } = await apiRequest(`/testimonials/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify({ ...currentData, is_featured: !currentData.is_featured })
+    });
+    if (data) fetchTestimonials();
+  };
 
   const handleDelete = async (id: number) => {
     if (!window.confirm('Are you sure you want to delete this review?')) return;
-    try {
-      const res = await fetch(`http://localhost:5000/api/testimonials/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('admin_token')}`
-        }
-      });
-      if ((await res.json()).success) {
-        fetchTestimonials();
-      }
-    } catch (error) {
-      console.error('Error deleting testimonial:', error);
-    }
+    const { data } = await apiRequest(`/testimonials/${id}`, { method: 'DELETE' });
+    if (data) fetchTestimonials();
   };
 
   const filteredTestimonials = testimonials.filter(t => 
@@ -102,124 +90,157 @@ export default function TestimonialManager() {
     t.content.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const stats = [
+    { label: 'Total Reviews', value: testimonials.length, icon: MessageCircle, tint: 'bg-[#E6F0FA] text-[#2A5A8A]' },
+    { label: 'Published', value: testimonials.filter(t => t.is_active).length, icon: CheckCircle2, tint: 'bg-[#E8F5E8] text-[#3A7A3A]' },
+    { label: 'Featured', value: testimonials.filter(t => t.is_featured).length, icon: Award, tint: 'bg-[#FFF3E0] text-[var(--color-accent-primary)]' },
+    { label: 'Avg. Rating', value: '4.8', icon: Star, tint: 'bg-[#FDFBF9] text-[#A05A00]' },
+  ];
+
   return (
-    <div className="animate-in fade-in duration-700">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+    <div className="space-y-8 animate-in fade-in duration-500 text-[DM Sans]">
+        {/* Header Area */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-['Baloo_2'] font-bold text-amber-950 mb-1">Reviews & Testimonials</h2>
-          <p className="text-sm text-slate-500 font-medium">Curate the social proof displayed on the public landing page.</p>
+          <h1 className="font-display text-[34px] font-bold text-[var(--color-text-primary)]">Reviews Wall</h1>
+          <p className="text-[14px] text-[var(--color-text-secondary)]">Curate the social proof displayed on the public landing page.</p>
         </div>
-        <button className="flex items-center gap-2 px-6 py-3 bg-amber-950 text-white rounded-2xl font-bold text-sm hover:bg-amber-900 transition-all shadow-xl shadow-amber-950/20">
-          <Plus size={18} />
+        <Button 
+          className="bg-[var(--color-accent-primary)] hover:bg-[var(--color-accent-dark)] text-white font-semibold text-[13px] px-6 h-[44px] shadow-[var(--shadow-btn)]"
+        >
+          <Plus size={18} className="mr-2" />
           Add Review
-        </button>
+        </Button>
       </div>
 
-      <div className="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm mb-6 flex flex-col md:flex-row gap-4 items-center">
-        <div className="relative flex-1 w-full">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-          <input 
-            type="text" 
-            placeholder="Search reviews by name or content..." 
-            className="w-full pl-12 pr-4 py-3 bg-slate-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-amber-500 transition-all font-medium"
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-          />
-        </div>
-        <div className="flex items-center gap-2 w-full md:w-auto">
-          <button className="flex items-center justify-center gap-2 px-4 py-3 bg-white border border-slate-200 rounded-2xl text-sm font-bold text-slate-600 hover:bg-slate-50 transition-all flex-1 md:flex-none">
-            <Filter size={18} />
+      {/* Stat Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {stats.map((stat, i) => {
+          const Icon = stat.icon;
+          return (
+            <div key={i} className="bg-[var(--color-bg-surface)] p-6 rounded-[var(--radius-lg)] shadow-[var(--shadow-card)]">
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${stat.tint} mb-4`}>
+                <Icon size={20} />
+              </div>
+              <p className="text-[var(--color-text-secondary)] text-[13px] font-medium mb-1">{stat.label}</p>
+              <p className="font-display text-[26px] font-bold text-[var(--color-text-primary)]">{stat.value}</p>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="bg-[var(--color-bg-surface)] rounded-[var(--radius-lg)] shadow-[var(--shadow-card)] overflow-hidden">
+        <div className="p-6 border-b border-[var(--color-border)] flex flex-row items-center justify-between">
+          <div className="flex items-center gap-4">
+             <h2 className="font-display text-[20px] font-bold text-[var(--color-text-primary)] whitespace-nowrap">Feedback Wall</h2>
+             <div className="relative w-64 max-md:hidden">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-secondary)]" size={16} />
+                <Input 
+                  type="text" 
+                  placeholder="Search reviews..." 
+                  className="w-full h-[36px] pl-10 pr-4 bg-[var(--color-bg-muted)] border-transparent rounded-full text-[13px] outline-none focus:bg-white focus:border-[var(--color-border)] transition-all"
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                />
+             </div>
+          </div>
+          <Button variant="ghost" className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] font-semibold text-[13px]">
+            <Filter size={16} className="mr-2" />
             Filter
-          </button>
+          </Button>
         </div>
-      </div>
 
-      <div className="bg-white rounded-[40px] border border-slate-100 shadow-sm overflow-hidden">
-        {loading ? (
-             <div className="py-40 flex flex-col items-center justify-center text-slate-400">
-               <Loader2 size={40} className="animate-spin mb-4 text-amber-500" />
-               <p className="font-bold tracking-tight">Loading social proof...</p>
-             </div>
-        ) : (
-             <div className="overflow-x-auto">
-                <table className="w-full text-left">
-                   <thead>
-                      <tr className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-100 bg-slate-50/50">
-                         <th className="px-8 py-5">Reviewer</th>
-                         <th className="px-8 py-5">Feedback</th>
-                         <th className="px-8 py-5">Rating</th>
-                         <th className="px-8 py-5">Visibility</th>
-                         <th className="px-8 py-5 text-right">Actions</th>
-                      </tr>
-                   </thead>
-                   <tbody className="divide-y divide-slate-50">
-                      {filteredTestimonials.map(test => (
-                         <tr key={test.id} className="group hover:bg-slate-50/80 transition-all">
-                            <td className="px-8 py-5">
-                               <div className="flex items-center gap-4">
-                                  <img 
-                                      src={test.image_url || '/api/placeholder/40/40'} 
-                                      alt={test.name} 
-                                      className="w-12 h-12 rounded-full object-cover border-2 border-slate-100 shrink-0"
-                                  />
-                                  <div>
-                                     <p className="text-sm font-bold text-amber-950 flex items-center gap-2">
-                                        {test.name}
-                                        {test.is_featured && <ShieldCheck size={14} className="text-amber-500" />}
-                                     </p>
-                                     <p className="text-[10px] text-slate-400 font-medium">{test.role}</p>
-                                  </div>
-                               </div>
-                            </td>
-                            <td className="px-8 py-5 max-w-[300px]">
-                               <p className="text-sm text-slate-600 line-clamp-2 italic">"{test.content}"</p>
-                            </td>
-                            <td className="px-8 py-5">
-                               <div className="flex items-center gap-1">
-                                  {[...Array(5)].map((_, i) => (
-                                     <Star key={i} size={14} className={i < test.rating ? "fill-amber-400 text-amber-400" : "fill-slate-100 text-slate-200"} />
-                                  ))}
-                               </div>
-                            </td>
-                            <td className="px-8 py-5">
-                               <div className="flex gap-2">
-                                  <button 
-                                      onClick={() => handleToggleActive(test.id, test)}
-                                      className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider transition-all ${
-                                        test.is_active ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
-                                      }`}
-                                  >
-                                      {test.is_active ? 'Public' : 'Hidden'}
-                                  </button>
-                                  <button 
-                                      onClick={() => handleToggleFeatured(test.id, test)}
-                                      className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider transition-all border ${
-                                        test.is_featured ? 'border-amber-200 text-amber-700 bg-amber-50 hover:bg-amber-100' : 'border-slate-200 text-slate-400 bg-transparent hover:bg-slate-50'
-                                      }`}
-                                  >
-                                      Featured
-                                  </button>
-                               </div>
-                            </td>
-                            <td className="px-8 py-5 text-right">
-                               <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                  <button className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-xl transition-all">
-                                    <Edit2 size={16} />
-                                  </button>
-                                  <button 
-                                    onClick={() => handleDelete(test.id)}
-                                    className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all"
-                                  >
-                                    <Trash2 size={16} />
-                                  </button>
-                               </div>
-                            </td>
-                         </tr>
-                      ))}
-                   </tbody>
-                </table>
-             </div>
-        )}
+        <div className="w-full">
+           {loading ? (
+            <div className="py-20 flex flex-col items-center justify-center text-[var(--color-text-secondary)]">
+              <Loader2 size={32} className="animate-spin mb-4 text-[var(--color-accent-primary)]" />
+              <p className="text-[14px] font-medium">Synchronizing social proof...</p>
+            </div>
+          ) : filteredTestimonials.length > 0 ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Reviewer</TableHead>
+                  <TableHead>Feedback</TableHead>
+                  <TableHead>Rating</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right pr-6">Action</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredTestimonials.map(test => (
+                  <TableRow key={test.id} className="hover:bg-[var(--color-bg-base)] transition-colors group">
+                    <TableCell className="py-5">
+                      <div className="flex items-center gap-4">
+                        <Avatar className="w-10 h-10 border-2 border-white shadow-sm shrink-0">
+                          <AvatarImage src={test.image_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${test.name}`} />
+                          <AvatarFallback>{test.name[0]}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="text-[14px] font-bold text-[var(--color-text-primary)] flex items-center gap-2">
+                             {test.name}
+                             {test.is_featured && <ShieldCheck size={14} className="text-[#A05A00]" />}
+                          </p>
+                          <p className="text-[12px] text-[var(--color-text-secondary)]">{test.role}</p>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="max-w-[300px]">
+                      <p className="text-[13px] text-[var(--color-text-secondary)] line-clamp-2 leading-relaxed italic">"{test.content}"</p>
+                    </TableCell>
+                    <TableCell>
+                       <div className="flex items-center gap-0.5">
+                          {[...Array(5)].map((_, i) => (
+                             <Star key={i} size={12} className={cn(
+                               "transition-all duration-300",
+                               i < test.rating ? "fill-[var(--color-accent-primary)] text-[var(--color-accent-primary)]" : "text-[var(--color-bg-muted)]"
+                             )} />
+                          ))}
+                       </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                         <button 
+                            onClick={() => handleToggleActive(test.id, test)}
+                            className={cn(
+                              "px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all border",
+                              test.is_active ? 'bg-[#E8F5E8] text-[#3A7A3A] border-[#3A7A3A]/10' : 'bg-[var(--color-bg-muted)] text-[var(--color-text-secondary)] border-transparent'
+                            )}
+                         >
+                            {test.is_active ? 'Published' : 'Hidden'}
+                         </button>
+                         <button 
+                            onClick={() => handleToggleFeatured(test.id, test)}
+                            className={cn(
+                              "px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all border",
+                              test.is_featured ? 'bg-[#FFF3E0] text-[var(--color-accent-primary)] border-[var(--color-accent-primary)]/10' : 'text-[var(--color-text-secondary)] border-transparent text-sm opacity-50'
+                            )}
+                         >
+                            {test.is_featured ? '⭐ Featured' : 'Feature'}
+                         </button>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right pr-6">
+                       <div className="flex items-center justify-end gap-2 group-hover:opacity-100 transition-opacity">
+                         <button onClick={() => handleDelete(test.id)} className="p-2 text-[var(--color-text-secondary)] hover:text-[var(--color-danger)] transition-colors">
+                           <Trash2 size={16} />
+                         </button>
+                         <button className="p-2 text-[var(--color-text-secondary)] hover:text-[var(--color-accent-primary)] transition-colors">
+                           <Edit2 size={16} />
+                         </button>
+                       </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <div className="py-20 flex flex-col items-center justify-center text-[var(--color-text-secondary)]">
+              <Star size={48} className="mb-4 text-[var(--color-accent-primary)]/20" />
+              <p className="text-[14px] font-semibold">No customer feedback yet</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

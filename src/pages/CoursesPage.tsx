@@ -13,7 +13,7 @@ import {
   Lock,
   ArrowRight
 } from 'lucide-react';
-import AcademyRegistrationModal from '../components/AcademyRegistrationModal';
+import CourseRegistrationModal from '../components/CourseRegistrationModal';
 
 const CATEGORIES = ['All', 'Beginner', 'Intermediate', 'Professional'];
 
@@ -104,7 +104,7 @@ export default function CoursesPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [visibleElements, setVisibleElements] = useState<number>(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedCourse, setSelectedCourse] = useState<{name: string, date: string, price: string} | null>(null);
+  const [selectedCourse, setSelectedCourse] = useState<any>(null);
 
   // Initialize animations on mount
   useEffect(() => {
@@ -117,9 +117,15 @@ export default function CoursesPage() {
 
   const openRegistration = (course: any) => {
     setSelectedCourse({
+      id: course.id,
       name: course.name,
-      date: 'Instant Access',
-      price: `KES ${course.price.toLocaleString()}`
+      desc: course.desc,
+      price: course.price,
+      duration: course.duration || 'Self-paced',
+      lessons: course.lessons || 10,
+      image: course.image,
+      features: course.features || [],
+      tag: course.tag || 'Popular'
     });
     setIsModalOpen(true);
   };
@@ -295,10 +301,10 @@ export default function CoursesPage() {
          </div>
       </section>
 
-      <AcademyRegistrationModal 
+      <CourseRegistrationModal 
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        item={selectedCourse}
+        course={selectedCourse}
       />
 
       <style>{`
