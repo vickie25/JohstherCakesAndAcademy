@@ -14,10 +14,7 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { apiRequest } from '@/lib/api';
 
-const MOCK_INQUIRIES: Inquiry[] = [
-  { id: 1, name: 'Grace Wambui', email: 'grace@example.com', phone: '0700112233', type: 'Custom Cake', message: 'I need a 3-tier cake for my wedding in June.', status: 'new', created_at: new Date().toISOString() },
-  { id: 2, name: 'Alex Muli', email: 'alex@example.com', phone: '0788990011', type: 'Academy', message: 'When is the next intermediate baking class?', status: 'read', created_at: new Date().toISOString() },
-];
+// Data fetched exclusively from API
 
 interface Inquiry {
   id: number;
@@ -45,12 +42,12 @@ export default function InquiryManager() {
       if (data) {
         setInquiries(data);
       } else if (error) {
-        console.warn('Backend connection failed, using mock inquiries:', error);
-        setInquiries(MOCK_INQUIRIES);
+        console.error('Backend connection error:', error);
+        setInquiries([]);
       }
     } catch (error) {
       console.error('Error in fetchInquiries:', error);
-      setInquiries(MOCK_INQUIRIES);
+      setInquiries([]);
     } finally {
       setLoading(false);
     }

@@ -18,10 +18,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { apiRequest, formatCurrency } from '@/lib/api';
 
-const MOCK_USERS: User[] = [
-  { id: 1, name: 'Maina Kamau', email: 'maina@example.com', role: 'admin', created_at: new Date().toISOString(), total_spent: '75000' },
-  { id: 2, name: 'Alice Wakesho', email: 'alice@example.com', role: 'customer', created_at: new Date().toISOString(), total_spent: '12500' },
-];
+// Data fetched purely from backend api
 
 interface User {
   id: number;
@@ -48,12 +45,12 @@ export default function CustomersManager() {
           total_spent: u.total_spent || Math.floor(Math.random() * 500000).toString()
         })));
       } else if (error) {
-        console.warn('Backend connection failed, using mock users:', error);
-        setUsers(MOCK_USERS);
+        console.error('Backend connection error:', error);
+        setUsers([]);
       }
     } catch (error) {
       console.error('Error in fetchUsers:', error);
-      setUsers(MOCK_USERS);
+      setUsers([]);
     } finally {
       setLoading(false);
     }

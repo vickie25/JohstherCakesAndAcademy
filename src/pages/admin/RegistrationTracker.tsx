@@ -11,10 +11,7 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { apiRequest } from '@/lib/api';
 
-const MOCK_REGISTRATIONS: Registration[] = [
-  { id: 1, student_name: 'Sarah Kimani', email: 'sarah@example.com', phone: '0712345678', course_name: 'Advanced Baking', batch_name: 'Easter Intake 2026', status: 'confirmed', payment_status: 'paid', created_at: new Date().toISOString() },
-  { id: 2, student_name: 'John Kamau', email: 'john@example.com', phone: '0722334455', course_name: 'Pastry Arts', batch_name: 'Summer Fast-track', status: 'pending', payment_status: 'unpaid', created_at: new Date().toISOString() },
-];
+// Data is fetching from Backend API
 
 interface Registration {
   id: number;
@@ -41,12 +38,12 @@ export default function RegistrationTracker() {
       if (data) {
         setRegistrations(data);
       } else if (error) {
-        console.warn('Backend connection failed, using mock registrations:', error);
-        setRegistrations(MOCK_REGISTRATIONS);
+        console.error('Backend connection error:', error);
+        setRegistrations([]);
       }
     } catch (error) {
       console.error('Error in fetchRegistrations:', error);
-      setRegistrations(MOCK_REGISTRATIONS);
+      setRegistrations([]);
     } finally {
       setLoading(false);
     }
