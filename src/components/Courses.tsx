@@ -19,51 +19,13 @@ interface Course {
   features: string[];
 }
 
-const FALLBACK_COURSES: Course[] = [
-  { 
-    id: 501, 
-    name: 'Beginner Baker Pro', 
-    price: 2900, 
-    image: '/hero_baker.png', 
-    tag: 'Starter', 
-    desc: 'Master the science of cake mixing and basic decorating from scratch.',
-    lessons: 12,
-    duration: '5h 30m',
-    students: 1250,
-    features: ['Video Tutorials', 'Recipe PDFs', 'WhatsApp Support']
-  },
-  { 
-    id: 502, 
-    name: 'The Fondant Masterclass', 
-    price: 7500, 
-    image: '/hero_cake_elegant.png', 
-    tag: 'Best Seller', 
-    desc: 'Advanced sculpting, sharp edges, and multi-tier stability techniques.',
-    lessons: 24,
-    duration: '12h 45m',
-    students: 840,
-    features: ['HD Video', 'Doubt Clearing', 'Digital Certificate']
-  },
-  { 
-    id: 503, 
-    name: 'Baking Business Launchpad', 
-    price: 12000, 
-    image: '/academy-class.png', 
-    tag: 'Business', 
-    desc: 'Transform your passion into a profitable brand with marketing & costing.',
-    lessons: 30,
-    duration: '20h 15m',
-    students: 450,
-    features: ['1-on-1 Mentoring', 'Social Media Hub', 'Business Templates']
-  },
-];
-
+// Fetch from Backend
 import { useNavigation } from '../context/NavigationContext';
 
 export default function Courses() {
   const ref = useRef<HTMLElement>(null);
   const { goToCourses } = useNavigation();
-  const [courses, setCourses] = useState<Course[]>(FALLBACK_COURSES);
+  const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);

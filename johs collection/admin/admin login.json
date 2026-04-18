@@ -11,7 +11,7 @@
     "method": "POST",
     "queryParams": [],
     "headers": [],
-    "body": "{\n  \"username\": \"admin\",\n  \"password\": \"admin123\"\n}\n",
+    "body": "{\n  \"username\": \"jame\",\n  \"password\": \"james3900\"\n}\n",
     "contentType": "application/json",
     "auth": {
       "currentAuthType": "INHERIT",

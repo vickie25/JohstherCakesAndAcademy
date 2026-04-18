@@ -21,15 +21,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { cn } from '@/lib/utils';
 import { apiRequest, formatCurrency } from '@/lib/api';
 
-const MOCK_BATCHES: Batch[] = [
-  { id: 1, name: 'Easter Intake 2026', start_date: '2026-04-20', end_date: '2026-05-20', price: 25000, status: 'Active', course_name: 'Advanced Baking', capacity: 20, enrolled: 12 },
-  { id: 2, name: 'Summer Fast-track', start_date: '2026-06-01', end_date: '2026-06-15', price: 15000, status: 'Upcoming', course_name: 'Pastry Arts', capacity: 15, enrolled: 0 },
-];
-
-const MOCK_COURSES: Course[] = [
-  { id: 1, title: 'Advanced Baking', subtitle: 'Master artisanal sourdough and pastries.', price: 45000, duration: '4 Weeks', sessions: '12 Sessions', image_url: 'https://images.unsplash.com/photo-1555507036-ab1f4038808a?q=80&w=2000', brand_color: '#DAA520', features: [], tag: 'Popular', is_active: true, level: 'advanced', sessions: '12' },
-  { id: 2, title: 'Pastry Arts', subtitle: 'French patisserie fundamentals.', price: 35000, duration: '2 Weeks', sessions: '6 Sessions', image_url: 'https://images.unsplash.com/photo-1488477181946-6428a0291777?q=80&w=2000', brand_color: '#FF69B4', features: [], tag: 'New', is_active: true, level: 'intermediate', sessions: '6' },
-];
+// Data is fetched exclusively from the API
 
 interface Course {
   id: number;
@@ -96,8 +88,8 @@ export default function AcademyManager() {
           end_date: b.end_date || new Date().toISOString()
         })));
       } else if (batchRes.error) {
-        console.warn('Using mock batches:', batchRes.error);
-        setBatches(MOCK_BATCHES);
+        console.error('Batch fetch error:', batchRes.error);
+        setBatches([]);
       }
 
       if (courseRes.data) {
@@ -106,13 +98,13 @@ export default function AcademyManager() {
           level: c.level || 'beginner'
         })));
       } else if (courseRes.error) {
-        console.warn('Using mock courses:', courseRes.error);
-        setCourses(MOCK_COURSES);
+        console.error('Course fetch error:', courseRes.error);
+        setCourses([]);
       }
     } catch (error) {
       console.error('Error fetching academy data:', error);
-      setBatches(MOCK_BATCHES);
-      setCourses(MOCK_COURSES);
+      setBatches([]);
+      setCourses([]);
     } finally {
       setLoading(false);
     }

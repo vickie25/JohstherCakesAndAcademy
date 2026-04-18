@@ -1,15 +1,21 @@
 const BASE_URL = 'http://localhost:5000/api';
 
-interface RequestOptions extends RequestInit {
+interface RequestOptions extends Omit<RequestInit, 'body'> {
   useAuth?: boolean;
+  body?: any;
 }
 
 export async function apiRequest<T>(endpoint: string, options: RequestOptions = {}): Promise<{ data: T | null; error: string | null }> {
-  const { useAuth = true, ...fetchOptions } = options;
+  const { useAuth = true, body, ...fetchOptions } = options;
   
   const headers = new Headers(fetchOptions.headers || {});
-  if (!headers.has('Content-Type') && !(fetchOptions.body instanceof FormData)) {
-    headers.set('Content-Type', 'application/json');
+  
+  let processedBody = body;
+  if (body && typeof body === 'object' && !(body instanceof FormData)) {
+    processedBody = JSON.stringify(body);
+    if (!headers.has('Content-Type')) {
+      headers.set('Content-Type', 'application/json');
+    }
   }
 
   if (useAuth) {
@@ -22,6 +28,7 @@ export async function apiRequest<T>(endpoint: string, options: RequestOptions = 
   try {
     const response = await fetch(`${BASE_URL}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`, {
       ...fetchOptions,
+      body: processedBody,
       headers,
     });
 

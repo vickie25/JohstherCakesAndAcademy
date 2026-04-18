@@ -19,10 +19,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { apiRequest } from '@/lib/api';
 
-const MOCK_TESTIMONIALS: Testimonial[] = [
-  { id: 1, name: 'Mercy Njeri', role: 'Home Baker', content: 'Johsther Academy changed my life! The advanced baking course was intense but rewarding.', rating: 5, image_url: '', is_featured: true, is_active: true, created_at: new Date().toISOString() },
-  { id: 2, name: 'David Maina', role: 'Entrepreneur', content: 'Best cakes in Nairobi, hands down. The Victorian Velvet is a masterpiece.', rating: 5, image_url: '', is_featured: false, is_active: true, created_at: new Date().toISOString() },
-];
+// Data fetched entirely from Backend API
 
 interface Testimonial {
   id: number;
@@ -48,12 +45,12 @@ export default function TestimonialManager() {
       if (data) {
         setTestimonials(data);
       } else if (error) {
-        console.warn('Backend connection failed, using mock testimonials:', error);
-        setTestimonials(MOCK_TESTIMONIALS);
+        console.error('Backend connection error:', error);
+        setTestimonials([]);
       }
     } catch (error) {
       console.error('Error in fetchTestimonials:', error);
-      setTestimonials(MOCK_TESTIMONIALS);
+      setTestimonials([]);
     } finally {
       setLoading(false);
     }

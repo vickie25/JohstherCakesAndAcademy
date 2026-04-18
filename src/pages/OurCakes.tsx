@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useCart } from '../context/CartContext';
 import { ShoppingCart, Filter, Search, X, Check } from 'lucide-react';
+import { apiRequest } from '../lib/api';
 
 const CATEGORIES = ['All', 'Wedding', 'Birthday', 'Corporate', 'Academy'];
 
@@ -40,13 +41,19 @@ export default function OurCakes() {
   useEffect(() => {
     const fetchCakes = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/cakes');
-        const data = await response.json();
-        if (data.success) {
-          setCakes(data.data);
+        const { data, error } = await apiRequest<Cake[]>('/cakes?active=false');
+        if (data) {
+          setCakes(data.map((c: any) => ({
+            ...c,
+            image_url: c.image_url || c.image || ''
+          })));
+        } else if (error) {
+          console.error('Failed to fetch cakes:', error);
+          setCakes([]);
         }
       } catch (error) {
         console.error('Failed to fetch cakes:', error);
+        setCakes([]);
       } finally {
         setLoading(false);
       }

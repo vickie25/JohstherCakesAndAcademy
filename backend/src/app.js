@@ -36,17 +36,16 @@ app.use(cors({
   credentials: true
 }));
 
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per windowMs
-  message: {
-    success: false,
-    message: 'Too many requests from this IP, please try again later.'
-  }
-});
-
-app.use('/api/', limiter);
+// Rate limiting (temporarily disabled for testing)
+// const limiter = rateLimit({
+//   windowMs: process.env.NODE_ENV === 'development' ? 1 * 60 * 1000 : 15 * 60 * 1000, // 1 min dev / 15 min prod
+//   max: process.env.NODE_ENV === 'development' ? 500 : 100, // 500 dev / 100 prod
+//   message: {
+//     success: false,
+//     message: 'Too many requests from this IP, please try again later.'
+//   }
+// });
+// app.use('/api/', limiter);
 
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
@@ -62,6 +61,9 @@ app.get('/health', (req, res) => {
   });
 });
 
+const dashboardRoutes = require('../routes/dashboard');
+const settingsRoutes = require('../routes/settings');
+
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
@@ -70,6 +72,7 @@ app.use('/api/courses', courseRoutes);
 app.use('/api/academy', academyRoutes);
 app.use('/api/inquiries', inquiryRoutes);
 app.use('/api/testimonials', testimonialRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 // 404 handler - using a different approach
 app.use((req, res, next) => {

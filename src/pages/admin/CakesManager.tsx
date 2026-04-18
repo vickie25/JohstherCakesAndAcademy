@@ -22,11 +22,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { cn } from "@/lib/utils";
 import { apiRequest, formatCurrency } from '@/lib/api';
 
-const MOCK_CAKES: Cake[] = [
-  { id: 1, name: 'Victorian Velvet', category: 'Wedding', color: 'Red', price: 45000, image_url: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?q=80&w=2000', tag: 'Bestseller', description: 'Deep red velvet layers.', is_active: true },
-  { id: 2, name: 'Golden Sunrise', category: 'Birthday', color: 'Gold', price: 12000, image_url: 'https://images.unsplash.com/photo-1588195538326-c5b1e9f80a1b?q=80&w=2000', tag: 'New', description: 'Bright and citrusy.', is_active: true },
-  { id: 3, name: 'Chocolate Truffle', category: 'Corporate', color: 'Chocolate', price: 8500, image_url: 'https://images.unsplash.com/photo-1571115177098-24ec4209b5d5?q=80&w=2000', tag: '', description: 'Rich dark chocolate.', is_active: false },
-];
+// Data is fetched exclusively from the API
 
 interface Cake {
   id: number;
@@ -70,12 +66,12 @@ export default function CakesManager() {
       if (data) {
         setCakes(data);
       } else if (error) {
-        console.warn('Backend connection failed, using mock data:', error);
-        setCakes(MOCK_CAKES);
+        console.error('Backend connection error:', error);
+        setCakes([]);
       }
     } catch (error) {
       console.error('Error in fetchCakes:', error);
-      setCakes(MOCK_CAKES);
+      setCakes([]);
     } finally {
       setLoading(false);
     }

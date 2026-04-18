@@ -128,48 +128,37 @@ router.post('/login', validateLogin, async (req, res) => {
 });
 
 // @route   POST /api/auth/admin-login
-// @desc    Login admin with special credentials
-// @access  Public (Check logic inside)
+// @desc    Login admin — looks up any admin user in DB by email or name, verifies password
+// @access  Public
 router.post('/admin-login', async (req, res) => {
   try {
     const { username, password } = req.body;
 
-    // As requested: Any username, but password must be 'admin123'
-    // For "security" we will also check if an admin user exists in DB or just use this logic
-    if (password !== 'admin123') {
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid admin credentials.'
-      });
+    if (!username || !password) {
+      return res.status(400).json({ success: false, message: 'Username and password are required.' });
     }
 
-    // Usually we would find a specific admin user, but for now we follow the "credentials we give the system"
-    // We will look for a user with role 'admin' or just generate a token for this session
-    // To maintain security, let's find the first user with role 'admin' or create a shadow one
-    let admin = await User.findByEmail('admin@johsther.com');
-    
+    // Look up admin by email first, then by name
+    let admin = await User.findByEmail(username);
+
+    // If not found by email, try searching by name among admin-role users
     if (!admin) {
-      console.log('Admin not found, attempting to create default admin...');
-      try {
-        admin = await User.create({
-          name: 'System Admin',
-          email: 'admin@johsther.com',
-          password: 'admin123',
-          role: 'admin'
-        });
-        console.log('Default admin created successfully');
-      } catch (createError) {
-        console.warn('Failed to create default admin (possibly role column missing):', createError.message);
-        // Attempt one last find in case it exists but role couldn't be inserted
-        admin = await User.findByEmail('admin@johsther.com');
-      }
+      const db = require('../config/database');
+      const result = await db.query(
+        `SELECT * FROM users WHERE role = 'admin' AND LOWER(name) = LOWER($1) LIMIT 1`,
+        [username]
+      );
+      admin = result.rows[0] || null;
     }
 
-    if (!admin) {
-      return res.status(500).json({
-        success: false,
-        message: 'Could not resolve admin user. Please ensure database schema is up to date (role column).'
-      });
+    if (!admin || admin.role !== 'admin') {
+      return res.status(401).json({ success: false, message: 'Invalid admin credentials.' });
+    }
+
+    // Verify password against hashed password in DB
+    const isValid = await User.verifyPassword(password, admin.password_hash);
+    if (!isValid) {
+      return res.status(401).json({ success: false, message: 'Invalid admin credentials.' });
     }
 
     const token = generateToken(admin.id, 'admin');
@@ -189,10 +178,7 @@ router.post('/admin-login', async (req, res) => {
     });
   } catch (error) {
     console.error('Admin login error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Server error during admin login.'
-    });
+    res.status(500).json({ success: false, message: 'Server error during admin login.' });
   }
 });
 

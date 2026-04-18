@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, type ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 
 type PageView = 'home' | 'checkout' | 'cakes' | 'academy' | 'courses' | 'about' | 'contact' | 'admin-login' | 'admin-dashboard';
 
@@ -18,17 +18,44 @@ interface NavigationContextType {
 const NavigationContext = createContext<NavigationContextType | undefined>(undefined);
 
 export function NavigationProvider({ children }: { children: ReactNode }) {
-  const [currentPage, setCurrentPage] = useState<PageView>('home');
+  const getInitialPage = (): PageView => {
+    const path = window.location.pathname;
+    if (path.startsWith('/admin/dashboard')) return 'admin-dashboard';
+    if (path.startsWith('/admin')) return 'admin-login';
+    if (path === '/checkout') return 'checkout';
+    if (path === '/cakes') return 'cakes';
+    if (path === '/academy') return 'academy';
+    if (path === '/courses') return 'courses';
+    if (path === '/about') return 'about';
+    if (path === '/contact') return 'contact';
+    return 'home';
+  };
 
-  const goToHome = () => setCurrentPage('home');
-  const goToCheckout = () => setCurrentPage('checkout');
-  const goToCakes = () => setCurrentPage('cakes');
-  const goToAcademy = () => setCurrentPage('academy');
-  const goToCourses = () => setCurrentPage('courses');
-  const goToAbout = () => setCurrentPage('about');
-  const goToContact = () => setCurrentPage('contact');
-  const goToAdminLogin = () => setCurrentPage('admin-login');
-  const goToAdminDashboard = () => setCurrentPage('admin-dashboard');
+  const [currentPage, setCurrentPage] = useState<PageView>(getInitialPage);
+
+  useEffect(() => {
+    const handlePopState = () => {
+      setCurrentPage(getInitialPage());
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  // Update both state and browser URL URL without reloading
+  const navigateTo = (page: PageView, path: string) => {
+    setCurrentPage(page);
+    window.history.pushState({}, '', path);
+  };
+
+  const goToHome = () => navigateTo('home', '/');
+  const goToCheckout = () => navigateTo('checkout', '/checkout');
+  const goToCakes = () => navigateTo('cakes', '/cakes');
+  const goToAcademy = () => navigateTo('academy', '/academy');
+  const goToCourses = () => navigateTo('courses', '/courses');
+  const goToAbout = () => navigateTo('about', '/about');
+  const goToContact = () => navigateTo('contact', '/contact');
+  const goToAdminLogin = () => navigateTo('admin-login', '/admin');
+  const goToAdminDashboard = () => navigateTo('admin-dashboard', '/admin/dashboard');
 
   return (
     <NavigationContext.Provider value={{ 

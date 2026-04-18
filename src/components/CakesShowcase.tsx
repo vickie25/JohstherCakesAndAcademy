@@ -18,63 +18,7 @@ interface Cake {
   tag: string;
 }
 
-const MOCK_CAKES: Cake[] = [
-  {
-    id: 1,
-    name: 'Midnight Truffle Symphony',
-    category: 'Birthday',
-    description: 'Triple-layered dark Belgian chocolate with a silky smooth ganache finish.',
-    price: 4500,
-    image_url: '/hero_cake_elegant.png',
-    tag: 'Luxury',
-  },
-  {
-    id: 2,
-    name: 'Royal Red Velvet Pearl',
-    category: 'Birthday',
-    description: 'Our signature crimson cocoa layers with Madagascar vanilla cream cheese frost.',
-    price: 3200,
-    image_url: '/red_velvet_cake.png',
-    tag: 'Signature',
-  },
-  {
-    id: 3,
-    name: 'Golden Orchard Delight',
-    category: 'Custom',
-    description: 'Moist vanilla bean layers filled with fresh passion fruit curd and citrus zest.',
-    price: 4000,
-    image_url: '/hero-cake.png',
-    tag: 'Fresh',
-  },
-  {
-    id: 4,
-    name: 'Antique Lace Wedding',
-    category: 'Wedding',
-    description: 'Exquisite three-tier masterpiece with hand-sculpted sugar flowers.',
-    price: 15500,
-    image_url: '/hero_cake_elegant.png',
-    tag: 'Wedding',
-  },
-  {
-    id: 5,
-    name: "Baker's Choice Selection",
-    category: 'Birthday',
-    description: 'Seasonal assortment of our finest sponge and buttercream combinations.',
-    price: 2800,
-    image_url: '/hero_baker.png',
-    tag: 'Classic',
-  },
-  {
-    id: 6,
-    name: 'Petite Artisan Treats',
-    category: 'Academy',
-    description: 'Curated selection of gourmet cupcakes and tarts from our academy laboratory.',
-    price: 1800,
-    image_url: '/academy-class.png',
-    tag: 'Academy',
-  },
-];
-
+// Data fetched from backend
 const tagColors: Record<string, { bg: string; color: string }> = {
   'Best Seller': { bg: '#F59E0B', color: '#fff' },
   Popular:       { bg: '#92400E', color: '#fff' },
@@ -86,7 +30,7 @@ const tagColors: Record<string, { bg: string; color: string }> = {
 
 export default function CakesShowcase() {
   const [active, setActive] = useState('All');
-  const [cakes, setCakes] = useState<Cake[]>(MOCK_CAKES);
+  const [cakes, setCakes] = useState<Cake[]>([]);
   const [loading, setLoading] = useState(false);
   const ref = useRef<HTMLElement>(null);
   const { items, addToCart, updateQuantity } = useCart();

@@ -17,86 +17,8 @@ import CourseRegistrationModal from '../components/CourseRegistrationModal';
 
 const CATEGORIES = ['All', 'Beginner', 'Intermediate', 'Professional'];
 
-const MOCK_COURSES = [
-  { 
-    id: 501, 
-    name: 'Beginner Baker Pro', 
-    level: 'Beginner', 
-    price: 2900, 
-    image: '/hero_baker.png', 
-    tag: 'Starter', 
-    desc: 'Master the science of cake mixing and basic decorating from scratch.',
-    lessons: 12,
-    duration: '5h 30m',
-    students: 1250,
-    features: ['Video Tutorials', 'Recipe PDFs', 'WhatsApp Support']
-  },
-  { 
-    id: 502, 
-    name: 'The Fondant Masterclass', 
-    level: 'Intermediate', 
-    price: 7500, 
-    image: '/hero_cake_elegant.png', 
-    tag: 'Best Seller', 
-    desc: 'Advanced sculpting, sharp edges, and multi-tier stability techniques.',
-    lessons: 24,
-    duration: '12h 45m',
-    students: 840,
-    features: ['HD Video', 'Doubt Clearing', 'Digital Certificate']
-  },
-  { 
-    id: 503, 
-    name: 'Baking Business Launchpad', 
-    level: 'Professional', 
-    price: 12000, 
-    image: '/academy-class.png', 
-    tag: 'Buisness', 
-    desc: 'Transform your passion into a profitable brand with marketing & costing.',
-    lessons: 30,
-    duration: '20h 15m',
-    students: 450,
-    features: ['1-on-1 Mentoring', 'Social Media Hub', 'Business Templates']
-  },
-  { 
-    id: 504, 
-    name: 'Wedding Cake Architecture', 
-    level: 'Professional', 
-    price: 15500, 
-    image: '/hero_cake_elegant.png', 
-    tag: 'Specialist', 
-    desc: 'Engineer massive 5-tier wedding cakes with safe transport techniques.',
-    lessons: 18,
-    duration: '15h 0m',
-    students: 310,
-    features: ['Structural Blueprints', 'Stacking Kit PDF', 'Vendor Contacts']
-  },
-  { 
-    id: 505, 
-    name: 'Cupcake Design Lab', 
-    level: 'Beginner', 
-    price: 1800, 
-    image: '/red_velvet_cake.png', 
-    tag: 'Playful', 
-    desc: 'Express your creativity with 20+ unique frosting and piping styles.',
-    lessons: 8,
-    duration: '3h 20m',
-    students: 2100,
-    features: ['Piping Guide', 'Flavour Matrix', 'Quick Cert']
-  },
-  { 
-    id: 506, 
-    name: 'Artisan Pastry Secrets', 
-    level: 'Intermediate', 
-    price: 5200, 
-    image: '/academy-class.png', 
-    tag: 'Advanced', 
-    desc: 'Delicate puff pastry, croissants, and gourmet fillings taught simply.',
-    lessons: 15,
-    duration: '9h 10m',
-    students: 580,
-    features: ['Laminating Tech', 'Gourmet Fillings', 'Physical kit opt']
-  },
-];
+// Data fetched natively from backend
+import { apiRequest } from '../lib/api';
 
 export default function CoursesPage() {
   const { goToCheckout } = useNavigation();
@@ -105,6 +27,27 @@ export default function CoursesPage() {
   const [visibleElements, setVisibleElements] = useState<number>(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<any>(null);
+  const [courses, setCourses] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const { data } = await apiRequest<any[]>('/courses?active=false');
+        if (data) {
+          setCourses(data);
+        } else {
+          setCourses([]);
+        }
+      } catch (err) {
+        console.error(err);
+        setCourses([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCourses();
+  }, []);
 
   // Initialize animations on mount
   useEffect(() => {
@@ -131,13 +74,13 @@ export default function CoursesPage() {
   };
 
   const filteredCourses = useMemo(() => {
-    return MOCK_COURSES.filter(course => {
+    return courses.filter(course => {
       const matchCat = activeCategory === 'All' || course.level === activeCategory;
-      const matchSearch = course.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          course.desc.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchSearch = (course.name || course.title || '').toLowerCase().includes(searchQuery.toLowerCase()) || 
+                          (course.desc || course.subtitle || '').toLowerCase().includes(searchQuery.toLowerCase());
       return matchCat && matchSearch;
     });
-  }, [activeCategory, searchQuery]);
+  }, [activeCategory, searchQuery, courses]);
 
   const getVisibility = (index: number) => visibleElements >= index ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8';
 
@@ -187,7 +130,12 @@ export default function CoursesPage() {
 
       {/* Course Grid */}
       <main className={`max-w-7xl mx-auto px-6 transition-all duration-1000 delay-200 ease-out ${getVisibility(2)}`}>
-        {filteredCourses.length === 0 ? (
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-40 bg-white/50 rounded-3xl border border-white">
+             <div className="w-12 h-12 border-4 border-amber-200 border-t-amber-500 rounded-full animate-spin mb-4"></div>
+             <p className="font-['Baloo_2'] font-bold text-amber-950 text-xl tracking-tight">Fetching courses...</p>
+          </div>
+        ) : filteredCourses.length === 0 ? (
           <div className="text-center py-20 bg-white/50 border-4 border-dashed border-amber-100 rounded-[40px]">
              <BookOpen size={64} className="mx-auto text-amber-200 mb-6" />
              <h3 className="text-2xl font-['Baloo_2'] font-bold text-[#78350F]">No courses found matching "{searchQuery}"</h3>
@@ -228,15 +176,15 @@ export default function CoursesPage() {
                     </div>
 
                     <h3 className="text-2xl font-['Baloo_2'] font-bold text-amber-950 mb-3 group-hover:text-amber-500 transition-colors leading-tight">
-                      {course.name}
+                      {course.name || course.title}
                     </h3>
                     
                     <p className="text-amber-900/60 text-sm leading-relaxed mb-6 flex-1 font-['Comic_Neue'] font-medium">
-                      {course.desc}
+                      {course.desc || course.subtitle}
                     </p>
 
                     <ul className="space-y-2 mb-8">
-                      {course.features.map(f => (
+                      {(course.features || []).slice(0, 3).map((f: string) => (
                         <li key={f} className="flex items-center gap-2 text-xs font-bold text-amber-800">
                           <Check size={14} className="text-emerald-500" />
                           {f}

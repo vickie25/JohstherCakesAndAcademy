@@ -27,49 +27,27 @@ import {
 } from 'recharts';
 import { apiRequest, formatCurrency } from '@/lib/api';
 
-const MOCK_DATA = [
-  { name: 'Jan', sales: 4000 },
-  { name: 'Feb', sales: 3000 },
-  { name: 'Mar', sales: 2000 },
-  { name: 'Apr', sales: 2780 },
-  { name: 'May', sales: 1890 },
-  { name: 'Jun', sales: 2390 },
-  { name: 'Jul', sales: 3490 },
-  { name: 'Aug', sales: 4000 },
-  { name: 'Sep', sales: 3000 },
-  { name: 'Oct', sales: 2000 },
-  { name: 'Nov', sales: 2780 },
-  { name: 'Dec', sales: 1890 },
-];
-
-const MOCK_RECENT_ORDERS = [
-  { id: '#E230A90', product: "Vanilla Bean Supreme", date: "Dec 25, 2024", amount: 45000, status: "Pending" },
-  { id: '#E230A91', product: "Chocolate Fudge Layer", date: "Dec 25, 2024", amount: 65000, status: "Delivered" },
-  { id: '#E230A92', product: "Strawberry Shortcake", date: "Dec 24, 2024", amount: 35000, status: "Cancelled" },
-];
+// Data will be fetched from API
 
 export default function DashboardOverview() {
   const [stats, setStats] = React.useState<any>(null);
-  const [orders, setOrders] = React.useState<any[]>(MOCK_RECENT_ORDERS);
+  const [orders, setOrders] = React.useState<any[]>([]);
+  const [chartData, setChartData] = React.useState<any[]>([]);
   const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
     const fetchDashboardData = async () => {
       setLoading(true);
-      // Since there's no dedicated dashboard stats endpoint, we fetch from a placeholder 
-      // or aggregate if you wanted, but for now we use mock with apiRequest fallback logic
-      const { data: statsData, error: statsError } = await apiRequest<any>('/dashboard/stats');
-      const { data: ordersData, error: ordersError } = await apiRequest<any[]>('/orders/recent');
+      const { data: statsData } = await apiRequest<any>('/dashboard/stats');
+      const { data: ordersData } = await apiRequest<any[]>('/dashboard/recent-orders');
+      const { data: chartResponse } = await apiRequest<any>('/dashboard/analytics');
 
       if (statsData) setStats(statsData);
-      else setStats({
-        users: '1,020',
-        monthlySales: 1200000,
-        totalSales: 14500000,
-        orders: '3,420'
-      });
+      else setStats({ users: '0', monthlySales: 0, totalSales: 0, orders: '0' });
 
       if (ordersData) setOrders(ordersData);
+      if (chartResponse?.lineData) setChartData(chartResponse.lineData);
+      
       setLoading(false);
     };
     fetchDashboardData();
@@ -118,7 +96,7 @@ export default function DashboardOverview() {
           </div>
           <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={MOCK_DATA}>
+              <AreaChart data={chartData}>
                 <defs>
                   <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#C8884A" stopOpacity={0.4}/>
