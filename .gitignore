@@ -29,4 +29,5 @@ dist-ssr
 *backendskills
 *.env
 *.design-system
-*.MASTER.md
+*MASTER.md
+*settings.md

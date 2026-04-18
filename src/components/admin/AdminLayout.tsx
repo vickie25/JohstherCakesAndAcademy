@@ -2,6 +2,7 @@ import React from 'react';
 import Sidebar from './Sidebar';
 import Header from './Header';
 import { cn } from "@/lib/utils";
+import { useState, useEffect } from "react";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -12,6 +13,17 @@ interface AdminLayoutProps {
 }
 
 export default function AdminLayout({ children, activeTab, setActiveTab, admin, onLogout }: AdminLayoutProps) {
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('sidebar_collapsed') === 'true';
+    }
+    return false;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('sidebar_collapsed', String(isCollapsed));
+  }, [isCollapsed]);
+
   return (
     <div className="flex h-screen bg-[var(--color-bg-base)] overflow-hidden admin-theme selection:bg-[var(--color-accent-primary)] selection:text-white">
       {/* Sidebar */}
@@ -19,10 +31,14 @@ export default function AdminLayout({ children, activeTab, setActiveTab, admin, 
         activeTab={activeTab} 
         setActiveTab={setActiveTab} 
         onLogout={onLogout} 
+        isCollapsed={isCollapsed}
+        setIsCollapsed={setIsCollapsed}
       />
 
       {/* Content Area */}
-      <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
+      <div className={cn(
+        "flex flex-col flex-1 min-w-0 overflow-hidden transition-all duration-300 ease-in-out"
+      )}>
         {/* Header */}
         <Header 
           adminName={admin?.name} 

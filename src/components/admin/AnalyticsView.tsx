@@ -24,38 +24,18 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { apiRequest, formatCurrency } from '@/lib/api';
 
-const MOCK_LINE_DATA = [
-  { name: 'Mon', users: 400, sales: 240 },
-  { name: 'Tue', users: 300, sales: 139 },
-  { name: 'Wed', users: 200, sales: 980 },
-  { name: 'Thu', users: 278, sales: 390 },
-  { name: 'Fri', users: 189, sales: 480 },
-  { name: 'Sat', users: 239, sales: 380 },
-  { name: 'Sun', users: 349, sales: 430 },
-];
-
-const MOCK_DEVICES = [
-  { name: 'Desktop', value: 65, color: '#C8884A' },
-  { name: 'Phone', value: 25, color: '#5A8A5E' },
-  { name: 'Others', value: 10, color: '#B5A090' },
-];
-
-const MOCK_COUNTRIES = [
-  { name: 'Kenya', users: 850, percentage: 85 },
-  { name: 'USA', users: 120, percentage: 12 },
-  { name: 'UK', users: 50, percentage: 5 },
-];
+// Data is fetched from /api/dashboard/analytics
 
 export default function AnalyticsView() {
-  const [lineData, setLineData] = React.useState(MOCK_LINE_DATA);
-  const [deviceData, setDeviceData] = React.useState(MOCK_DEVICES);
-  const [countryData, setCountryData] = React.useState(MOCK_COUNTRIES);
+  const [lineData, setLineData] = React.useState<any[]>([]);
+  const [deviceData, setDeviceData] = React.useState<any[]>([]);
+  const [countryData, setCountryData] = React.useState<any[]>([]);
   const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
     const fetchAnalytics = async () => {
       setLoading(true);
-      const { data: analytics, error } = await apiRequest<any>('/analytics');
+      const { data: analytics, error } = await apiRequest<any>('/dashboard/analytics');
       if (analytics) {
         if (analytics.lineData) setLineData(analytics.lineData);
         if (analytics.deviceData) setDeviceData(analytics.deviceData);
