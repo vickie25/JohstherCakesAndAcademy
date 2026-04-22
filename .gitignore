@@ -28,6 +28,9 @@ dist-ssr
 *.agent
 *backendskills
 *.env
+.env
+backend/.env
+backend/uploads/
 *.design-system
 *MASTER.md
 *settings.md

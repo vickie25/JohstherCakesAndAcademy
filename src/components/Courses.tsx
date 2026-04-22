@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import CourseRegistrationModal from './CourseRegistrationModal';
-import { apiRequest } from '../lib/api';
+import CourseRegistrationModal, { type CourseRegistrationPayload } from './CourseRegistrationModal';
+import { apiRequest, resolvePublicUploadUrl } from '../lib/api';
 import { Play, Clock, Users, ArrowRight, BookOpen, Check } from 'lucide-react';
 
 interface Course {
@@ -11,12 +11,13 @@ interface Course {
   subtitle?: string;
   price: number;
   duration: string;
-  lessons: number;
+  lessons?: number | unknown[];
   students: number;
   image?: string;
   image_url?: string;
   tag: string;
   features: string[];
+  delivery_type?: string;
 }
 
 // Fetch from Backend
@@ -27,12 +28,44 @@ export default function Courses() {
   const { goToCourses } = useNavigation();
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(false);
-  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
+  const [selectedCourse, setSelectedCourse] = useState<CourseRegistrationPayload | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [cohortCourse, setCohortCourse] = useState<CourseRegistrationPayload | null>(null);
+  const [cohortModalOpen, setCohortModalOpen] = useState(false);
+
+  const lessonCount = (c: Course) =>
+    Array.isArray(c.lessons) ? (c.lessons as unknown[]).length : Number(c.lessons) || 0;
 
   const openCourseModal = (course: Course) => {
-    setSelectedCourse(course);
+    setSelectedCourse({
+      id: course.id,
+      name: course.name || course.title,
+      desc: course.desc || course.subtitle,
+      price: course.price,
+      duration: course.duration,
+      lessons: lessonCount(course),
+      image: resolvePublicUploadUrl(course.image_url || course.image),
+      image_url: course.image_url,
+      features: course.features || [],
+      tag: course.tag,
+    });
     setIsModalOpen(true);
+  };
+
+  const openCohortModal = (course: Course) => {
+    setCohortCourse({
+      id: course.id,
+      name: course.name || course.title,
+      desc: course.desc || course.subtitle,
+      price: course.price,
+      duration: course.duration,
+      lessons: 0,
+      image: resolvePublicUploadUrl(course.image_url || course.image),
+      image_url: course.image_url,
+      features: course.features || [],
+      tag: course.tag || 'Cohort',
+    });
+    setCohortModalOpen(true);
   };
 
   useEffect(() => {
@@ -41,7 +74,7 @@ export default function Courses() {
 
     const fetchCourses = async () => {
       try {
-        const { data } = await apiRequest<Course[]>('/courses');
+        const { data } = await apiRequest<Course[]>('/courses', { useAuth: false });
         if (data && data.length > 0) {
           setCourses(data.slice(0, 3));
         }
@@ -125,6 +158,7 @@ export default function Courses() {
           ) : courses.map((course) => {
             const isPopular = course.tag === 'Best Seller' || course.tag === 'Most Popular';
             const color = '#B45309';
+            const physical = course.delivery_type === 'physical';
             return (
               <article
                 key={course.id}
@@ -163,7 +197,7 @@ export default function Courses() {
                 {/* Image */}
                 <div style={{ height: '180px', overflow: 'hidden' }}>
                   <img
-                    src={course.image || course.image_url}
+                    src={resolvePublicUploadUrl(course.image_url || course.image)}
                     alt={`${course.name || course.title || 'Professional'} baking course at Johsther Academy`}
                     style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.5s ease' }}
                     onMouseEnter={e => (e.currentTarget.style.transform = 'scale(1.05)')}
@@ -193,7 +227,7 @@ export default function Courses() {
                         padding: '3px 10px',
                         borderRadius: '999px',
                         border: '1.5px solid #F5E6C8',
-                      }}>{course.lessons} Lessons</span>
+                      }}>{physical ? 'Cohort' : `${lessonCount(course)} lessons`}</span>
                   </div>
 
                   <h3 style={{ fontFamily: "'Baloo 2', cursive", fontWeight: 800, fontSize: '1.25rem', color: '#78350F', marginBottom: '4px' }}>
@@ -222,25 +256,25 @@ export default function Courses() {
                       <div style={{ fontFamily: "'Comic Neue', cursive", fontSize: '0.78rem', color: '#A16207' }}>per person</div>
                     </div>
                     <button
-                      onClick={() => openCourseModal(course)}
+                      onClick={() => (physical ? openCohortModal(course) : openCourseModal(course))}
                       style={{
                         fontFamily: "'Baloo 2', cursive",
                         fontWeight: 700,
                         fontSize: '0.9rem',
-                        background: `linear-gradient(135deg, ${color}, #F59E0B)`,
+                        background: physical ? 'linear-gradient(135deg, #065f46, #059669)' : `linear-gradient(135deg, ${color}, #F59E0B)`,
                         color: '#fff',
                         border: 'none',
                         padding: '11px 24px',
                         borderRadius: '999px',
                         cursor: 'pointer',
-                        boxShadow: `0 6px 18px ${color}44`,
+                        boxShadow: physical ? '0 6px 18px rgba(5,150,105,0.35)' : `0 6px 18px ${color}44`,
                         transition: 'opacity 0.2s, transform 0.2s',
                       }}
                       onMouseEnter={e => { (e.currentTarget).style.opacity = '0.88'; (e.currentTarget).style.transform = 'translateY(-2px)'; }}
                       onMouseLeave={e => { (e.currentTarget).style.opacity = '1'; (e.currentTarget).style.transform = 'translateY(0)'; }}
-                      aria-label={`Enrol in ${course.name}`}
+                      aria-label={physical ? `Join cohort for ${course.name}` : `Enrol in ${course.name}`}
                     >
-                      Enrol Now
+                      {physical ? 'Join cohort' : 'Enrol now'}
                     </button>
                   </div>
                 </div>
@@ -291,10 +325,20 @@ export default function Courses() {
         </div>
       </div>
 
-      <CourseRegistrationModal 
+      <CourseRegistrationModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         course={selectedCourse}
+        variant="enroll"
+      />
+      <CourseRegistrationModal
+        isOpen={cohortModalOpen}
+        onClose={() => {
+          setCohortModalOpen(false);
+          setCohortCourse(null);
+        }}
+        course={cohortCourse}
+        variant="cohort"
       />
     </section>
   );

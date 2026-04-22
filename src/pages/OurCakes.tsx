@@ -403,7 +403,7 @@ export default function OurCakes() {
                                       name: cake.name,
                                       priceNum: cake.price,
                                       priceStr: `KES ${cake.price.toLocaleString()}`,
-                                      image: cake.image
+                                      image: cake.image_url
                                     });
                                     setIsCartOpen(true);
                                   }}

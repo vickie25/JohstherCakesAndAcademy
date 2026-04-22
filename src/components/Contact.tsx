@@ -1,8 +1,18 @@
 import { useState, useEffect, useRef } from 'react';
+import { apiRequest } from '../lib/api';
+
+const TYPE_LABELS: Record<string, string> = {
+  order: 'Cake order',
+  course: 'Course / academy',
+  group: 'Group / corporate',
+  other: 'General inquiry',
+};
 
 export default function Contact() {
   const [form, setForm] = useState({ name: '', email: '', phone: '', type: 'order', message: '' });
   const [sent, setSent] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const ref = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -16,9 +26,28 @@ export default function Contact() {
     return () => obs.disconnect();
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitError(null);
+    setSubmitting(true);
+    const { error } = await apiRequest('/inquiries', {
+      method: 'POST',
+      useAuth: false,
+      body: JSON.stringify({
+        name: form.name.trim(),
+        email: form.email.trim(),
+        phone: (form.phone || '').trim() || null,
+        type: TYPE_LABELS[form.type] || form.type,
+        message: form.message.trim(),
+      }),
+    });
+    setSubmitting(false);
+    if (error) {
+      setSubmitError(error);
+      return;
+    }
     setSent(true);
+    setForm({ name: '', email: '', phone: '', type: 'order', message: '' });
   };
 
   return (
@@ -66,17 +95,17 @@ export default function Contact() {
               {
                 icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>,
                 title: 'Visit Us',
-                info: 'Lucky Summer, Nairobi, Kenya',
+                info: 'Umoja One (Ngorano House), Moi Drive, Nairobi',
               },
               {
                 icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 11.5 19.79 19.79 0 0 1 1.64 2.9 2 2 0 0 1 3.6 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.6a16 16 0 0 0 6 6l.96-1.07a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 15.92z" /></svg>,
                 title: 'WhatsApp / Call',
-                info: '+254 700 000 000',
+                info: '0757 942121',
               },
               {
                 icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" /><polyline points="22,6 12,13 2,6" /></svg>,
                 title: 'Email',
-                info: 'hello@johsthercakes.co.ke',
+                info: 'hello@johstercakesacadamy.co.ke',
               },
               {
                 icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>,
@@ -226,7 +255,7 @@ export default function Contact() {
                     <input
                       id="contact-phone"
                       type="tel"
-                      placeholder="+254 700 000 000"
+                      placeholder="0757 942121"
                       value={form.phone}
                       onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
                       style={{
@@ -300,25 +329,31 @@ export default function Contact() {
                   />
                 </div>
 
+                {submitError && (
+                  <p style={{ fontFamily: "'Comic Neue', cursive", fontSize: '0.88rem', color: '#b91c1c', margin: 0 }}>
+                    {submitError}
+                  </p>
+                )}
                 <button
                   type="submit"
+                  disabled={submitting}
                   style={{
                     fontFamily: "'Baloo 2', cursive",
                     fontWeight: 700,
                     fontSize: '1rem',
-                    background: 'linear-gradient(135deg, #92400E, #B45309)',
+                    background: submitting ? '#a8a29e' : 'linear-gradient(135deg, #92400E, #B45309)',
                     color: '#fff',
                     border: 'none',
                     padding: '14px',
                     borderRadius: '14px',
-                    cursor: 'pointer',
+                    cursor: submitting ? 'not-allowed' : 'pointer',
                     boxShadow: '0 8px 20px rgba(146,64,14,0.3)',
                     transition: 'transform 0.2s, box-shadow 0.2s',
                   }}
-                  onMouseEnter={e => { (e.currentTarget).style.transform = 'translateY(-2px)'; (e.currentTarget).style.boxShadow = '0 12px 28px rgba(146,64,14,0.4)'; }}
+                  onMouseEnter={e => { if (!submitting) { (e.currentTarget).style.transform = 'translateY(-2px)'; (e.currentTarget).style.boxShadow = '0 12px 28px rgba(146,64,14,0.4)'; } }}
                   onMouseLeave={e => { (e.currentTarget).style.transform = 'translateY(0)'; (e.currentTarget).style.boxShadow = '0 8px 20px rgba(146,64,14,0.3)'; }}
                 >
-                  Send Message →
+                  {submitting ? 'Sending…' : 'Send message →'}
                 </button>
               </form>
             )}

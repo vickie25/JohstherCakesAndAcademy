@@ -1,8 +1,10 @@
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
+
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
-require('dotenv').config();
 
 const authRoutes = require('../routes/auth');
 const userRoutes = require('../routes/users');
@@ -14,8 +16,15 @@ const testimonialRoutes = require('../routes/testimonials');
 
 const app = express();
 
-// Security middleware
-app.use(helmet());
+// Security middleware (allow admin site to load videos/images from this origin)
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+  })
+);
+
+// Uploaded course media (thumbnails & lesson videos)
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 const allowedOrigins = [
   process.env.FRONTEND_URL || 'http://localhost:3000',
@@ -63,6 +72,7 @@ app.get('/health', (req, res) => {
 
 const dashboardRoutes = require('../routes/dashboard');
 const settingsRoutes = require('../routes/settings');
+const staffRoleRoutes = require('../routes/staffRoles');
 
 // API routes
 app.use('/api/auth', authRoutes);
@@ -73,6 +83,8 @@ app.use('/api/academy', academyRoutes);
 app.use('/api/inquiries', inquiryRoutes);
 app.use('/api/testimonials', testimonialRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/settings', settingsRoutes);
+app.use('/api/staff-roles', staffRoleRoutes);
 
 // 404 handler - using a different approach
 app.use((req, res, next) => {
@@ -93,7 +105,9 @@ app.use((error, req, res, next) => {
   });
 });
 
-const PORT = process.env.PORT || 5000;
+// NOTE: macOS often has AirPlay/Control Center listening on 5000.
+// Default to 5001 to avoid port conflicts in local dev.
+const PORT = process.env.PORT || 5001;
 
 const server = app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);

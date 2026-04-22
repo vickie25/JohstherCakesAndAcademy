@@ -270,7 +270,7 @@ export default function CheckoutPage() {
                        </div>
                        <div className="input-field">
                         <label className="premium-label">M-Pesa Phone Number</label>
-                        <input type="tel" className="premium-input" placeholder="+254 700 000 000" />
+                        <input type="tel" className="premium-input" placeholder="0757 942121" />
                       </div>
                     </div>
                   )}

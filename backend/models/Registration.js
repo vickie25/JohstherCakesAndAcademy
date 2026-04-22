@@ -18,6 +18,18 @@ class Registration {
     return result.rows[0];
   }
 
+  static async findByBatchId(batchId) {
+    const query = `
+      SELECT r.*, b.name as batch_name
+      FROM registrations r
+      LEFT JOIN academy_batches b ON r.batch_id = b.id
+      WHERE r.batch_id = $1
+      ORDER BY r.created_at DESC
+    `;
+    const result = await db.query(query, [batchId]);
+    return result.rows;
+  }
+
   static async updateStatus(id, status, paymentStatus) {
     const query = `
       UPDATE registrations 

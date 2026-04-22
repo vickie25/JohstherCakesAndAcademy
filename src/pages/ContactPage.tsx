@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { apiRequest } from '../lib/api';
 import {
   Mail,
   Phone,
@@ -16,25 +17,25 @@ const contactCards = [
   {
     icon: <MapPin size={22} />,
     title: 'Visit Our Studio',
-    detail: 'Lucky Summer, Nairobi, Kenya',
+    detail: 'Umoja One (Ngorano House), Moi Drive, Nairobi',
     action: 'Get Directions',
-    link: 'https://maps.google.com/?q=Lucky+Summer+Nairobi',
+    link: 'https://maps.google.com/?q=Umoja+One+Ngorano+House+Moi+Drive+Nairobi',
     color: '#B45309',
   },
   {
     icon: <Phone size={22} />,
     title: 'WhatsApp Us',
-    detail: '+254 700 000 000',
+    detail: '0757 942121',
     action: 'Chat Now',
-    link: 'https://wa.me/254700000000',
+    link: 'https://wa.me/254757942121',
     color: '#25D366',
   },
   {
     icon: <Mail size={22} />,
     title: 'Email Inquiry',
-    detail: 'hello@johsthercakes.co.ke',
+    detail: 'hello@johstercakesacadamy.co.ke',
     action: 'Send Email',
-    link: 'mailto:hello@johsthercakes.co.ke',
+    link: 'mailto:hello@johstercakesacadamy.co.ke',
     color: '#F59E0B',
   },
 ];
@@ -44,6 +45,15 @@ const stats = [
   { num: '350+', label: 'Students Trained' },
   { num: '< 24h', label: 'Response Time' },
 ];
+
+const SUBJECT_LABELS: Record<string, string> = {
+  'cake-order': 'Custom cake order',
+  academy: 'Academy enrollment',
+  wedding: 'Wedding consultation',
+  corporate: 'Corporate / event catering',
+  collaboration: 'Collaboration',
+  other: 'Other',
+};
 
 /* ─── Social links ────────────────────────────────────────────── */
 const socialLinks = [
@@ -70,13 +80,13 @@ const socialLinks = [
     ),
   },
   {
-    href: '#',
+    href: 'https://wa.me/254757942121',
     label: 'WhatsApp',
     color: '#25D366',
     icon: <MessageCircle size={20} />,
   },
   {
-    href: '#',
+    href: 'https://johstercakesacadamy.co.ke/',
     label: 'Website',
     color: '#F59E0B',
     icon: <Globe size={20} />,
@@ -88,6 +98,7 @@ export default function ContactPage() {
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSent, setIsSent] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [visible, setVisible] = useState<Record<string, boolean>>({});
   const sectionRef = useRef<HTMLDivElement>(null);
 
@@ -115,14 +126,34 @@ export default function ContactPage() {
     return () => obs.disconnect();
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitError(null);
+    if (!form.subject) {
+      setSubmitError('Please choose a topic so we can route your message.');
+      return;
+    }
     setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setIsSent(true);
-      setForm({ name: '', email: '', subject: '', message: '' });
-    }, 1600);
+    const topic = SUBJECT_LABELS[form.subject] || form.subject;
+    const fullMessage = `Topic: ${topic}\n\n${form.message.trim()}`;
+    const { error } = await apiRequest('/inquiries', {
+      method: 'POST',
+      useAuth: false,
+      body: JSON.stringify({
+        name: form.name.trim(),
+        email: form.email.trim(),
+        phone: null,
+        type: `Contact · ${topic}`,
+        message: fullMessage,
+      }),
+    });
+    setIsSubmitting(false);
+    if (error) {
+      setSubmitError(error);
+      return;
+    }
+    setIsSent(true);
+    setForm({ name: '', email: '', subject: '', message: '' });
   };
 
   const anim = (key: string, delay = 0) => ({
@@ -637,6 +668,7 @@ export default function ContactPage() {
                     </label>
                     <select
                       id="contact-subject"
+                      required
                       value={form.subject}
                       onChange={(e) => setForm({ ...form, subject: e.target.value })}
                       style={{
@@ -716,6 +748,12 @@ export default function ContactPage() {
                       }}
                     />
                   </div>
+
+                  {submitError && (
+                    <p style={{ margin: 0, fontSize: '0.9rem', color: '#b91c1c', fontFamily: "'Comic Neue', cursive" }}>
+                      {submitError}
+                    </p>
+                  )}
 
                   {/* CTA */}
                   <button
@@ -824,12 +862,12 @@ export default function ContactPage() {
               Find Us in Nairobi
             </div>
             <p style={{ color: '#A16207', fontSize: '0.9rem', lineHeight: 1.6, margin: 0 }}>
-              Located in <strong style={{ color: '#78350F' }}>Lucky Summer, Nairobi</strong> — where the sweet aroma of freshly baked cakes greets you at the door. Walk-ins welcome Mon–Sat.
+              Located in <strong style={{ color: '#78350F' }}>Umoja One (Ngorano House), Moi Drive</strong> — walk-ins welcome Mon–Sat.
             </p>
           </div>
 
           <a
-            href="https://maps.google.com/?q=Lucky+Summer+Nairobi"
+            href="https://maps.google.com/?q=Umoja+One+Ngorano+House+Moi+Drive+Nairobi"
             target="_blank"
             rel="noopener noreferrer"
             style={{

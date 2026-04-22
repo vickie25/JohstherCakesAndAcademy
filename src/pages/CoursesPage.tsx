@@ -1,27 +1,40 @@
 import { useState, useMemo, useEffect } from 'react';
-import { useNavigation } from '../context/NavigationContext';
-import { 
-  Search, 
-  Check, 
-  Play, 
-  BookOpen, 
-  Clock, 
-  Globe, 
-  Download, 
+import {
+  Search,
+  Check,
+  Play,
+  BookOpen,
+  Clock,
+  Globe,
+  Download,
   Award,
   Users,
   Lock,
-  ArrowRight
+  ArrowRight,
+  X,
+  MapPin,
 } from 'lucide-react';
 import CourseRegistrationModal from '../components/CourseRegistrationModal';
 
 const CATEGORIES = ['All', 'Beginner', 'Intermediate', 'Professional'];
 
-// Data fetched natively from backend
-import { apiRequest } from '../lib/api';
+import { apiRequest, resolvePublicUploadUrl } from '../lib/api';
+
+const CATEGORY_TO_LEVEL: Record<string, string> = {
+  Beginner: 'beginner',
+  Intermediate: 'intermediate',
+  Professional: 'advanced',
+};
+
+function courseLevel(course: any): string {
+  return String(course?.level || course?.tag || '').toLowerCase();
+}
+
+function isPhysicalCourse(course: any): boolean {
+  return course?.delivery_type === 'physical';
+}
 
 export default function CoursesPage() {
-  const { goToCheckout } = useNavigation();
   const [activeCategory, setActiveCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [visibleElements, setVisibleElements] = useState<number>(0);
@@ -30,10 +43,17 @@ export default function CoursesPage() {
   const [courses, setCourses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const [curriculumOpen, setCurriculumOpen] = useState(false);
+  const [curriculumLoading, setCurriculumLoading] = useState(false);
+  const [curriculumDetail, setCurriculumDetail] = useState<any>(null);
+
+  const [cohortModalOpen, setCohortModalOpen] = useState(false);
+  const [cohortCourse, setCohortCourse] = useState<any>(null);
+
   useEffect(() => {
     const fetchCourses = async () => {
       try {
-        const { data } = await apiRequest<any[]>('/courses?active=false');
+        const { data } = await apiRequest<any[]>('/courses', { useAuth: false });
         if (data) {
           setCourses(data);
         } else {
@@ -59,25 +79,53 @@ export default function CoursesPage() {
   }, []);
 
   const openRegistration = (course: any) => {
+    const cover = resolvePublicUploadUrl(course.image_url || course.image);
     setSelectedCourse({
       id: course.id,
-      name: course.name,
-      desc: course.desc,
+      name: course.name || course.title,
+      desc: course.desc || course.subtitle,
       price: course.price,
       duration: course.duration || 'Self-paced',
-      lessons: course.lessons || 10,
-      image: course.image,
+      lessons: Array.isArray(course.lessons) ? course.lessons.length : course.lessons || 0,
+      image: cover,
       features: course.features || [],
-      tag: course.tag || 'Popular'
+      tag: course.tag || 'Popular',
     });
     setIsModalOpen(true);
   };
 
+  const openCohortJoin = (course: any) => {
+    const cover = resolvePublicUploadUrl(course.image_url || course.image);
+    setCohortCourse({
+      id: course.id,
+      name: course.name || course.title,
+      price: course.price,
+      duration: course.duration || 'Scheduled',
+      lessons: 0,
+      image: cover,
+      features: course.features || [],
+      tag: course.tag || 'Cohort',
+    });
+    setCohortModalOpen(true);
+  };
+
+  const openCurriculum = async (courseId: number) => {
+    setCurriculumOpen(true);
+    setCurriculumLoading(true);
+    setCurriculumDetail(null);
+    const { data, error } = await apiRequest<any>(`/courses/${courseId}`, { useAuth: false });
+    if (!error && data) setCurriculumDetail(data);
+    setCurriculumLoading(false);
+  };
+
   const filteredCourses = useMemo(() => {
-    return courses.filter(course => {
-      const matchCat = activeCategory === 'All' || course.level === activeCategory;
-      const matchSearch = (course.name || course.title || '').toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          (course.desc || course.subtitle || '').toLowerCase().includes(searchQuery.toLowerCase());
+    return courses.filter((course) => {
+      const lvl = courseLevel(course);
+      const matchCat =
+        activeCategory === 'All' || lvl === CATEGORY_TO_LEVEL[activeCategory];
+      const matchSearch =
+        (course.name || course.title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (course.desc || course.subtitle || '').toLowerCase().includes(searchQuery.toLowerCase());
       return matchCat && matchSearch;
     });
   }, [activeCategory, searchQuery, courses]);
@@ -144,6 +192,7 @@ export default function CoursesPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {filteredCourses.map((course, i) => {
+              const physical = isPhysicalCourse(course);
               return (
                 <article 
                   key={course.id}
@@ -151,18 +200,26 @@ export default function CoursesPage() {
                   style={{ transitionDelay: `${i * 100}ms` }}
                 >
                   <div className="relative h-56 overflow-hidden">
-                    <img 
-                      src={course.image} 
-                      alt={course.name} 
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                    <img
+                      src={resolvePublicUploadUrl(course.image_url || course.image)}
+                      alt={course.name || course.title}
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                     />
+                    {!physical && (
                     <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                        <div className="w-14 h-14 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center border border-white/50 text-white transform translate-y-4 group-hover:translate-y-0 transition-transform">
                           <Play fill="white" size={24} />
                        </div>
                     </div>
+                    )}
+                    {physical && (
+                      <div className="absolute top-4 left-4 flex items-center gap-1.5 px-3 py-1.5 bg-emerald-700 text-white font-bold rounded-full text-xs shadow-lg">
+                        <MapPin size={14} />
+                        In person
+                      </div>
+                    )}
                     <div className="absolute top-4 right-4 px-4 py-1.5 bg-white/90 backdrop-blur-md text-[#78350F] font-bold rounded-full text-xs shadow-lg uppercase tracking-wider">
-                      {course.tag}
+                      {physical ? 'Cohort' : course.tag}
                     </div>
                   </div>
 
@@ -170,9 +227,22 @@ export default function CoursesPage() {
                     <div className="flex items-center gap-2 mb-4 text-amber-600 font-bold text-xs uppercase tracking-widest">
                       <Clock size={14} />
                       <span>{course.duration}</span>
-                      <span className="mx-1">•</span>
-                      <Users size={14} />
-                      <span>{course.students} Learners</span>
+                      {!physical && (
+                        <>
+                          <span className="mx-1">•</span>
+                          <Users size={14} />
+                          <span>
+                            {typeof course.students === 'number' ? course.students : 0}{' '}
+                            Learners · {Array.isArray(course.lessons) ? course.lessons.length : 0} lessons
+                          </span>
+                        </>
+                      )}
+                      {physical && (
+                        <>
+                          <span className="mx-1">•</span>
+                          <span className="normal-case font-['Comic_Neue']">Join a scheduled intake at our academy</span>
+                        </>
+                      )}
                     </div>
 
                     <h3 className="text-2xl font-['Baloo_2'] font-bold text-amber-950 mb-3 group-hover:text-amber-500 transition-colors leading-tight">
@@ -192,19 +262,45 @@ export default function CoursesPage() {
                       ))}
                     </ul>
 
-                    <div className="pt-6 border-t border-amber-100 flex items-center justify-between gap-4">
-                       <div>
-                         <p className="text-xs font-bold text-amber-900/40 uppercase tracking-tighter mb-1">Tuition Fee</p>
-                         <p className="text-2xl font-['Baloo_2'] font-extrabold text-[#78350F]">KES {course.price.toLocaleString()}</p>
+                    <div className="pt-6 border-t border-amber-100 flex flex-col gap-3">
+                       <div className="flex items-center justify-between gap-4">
+                         <div>
+                           <p className="text-xs font-bold text-amber-900/40 uppercase tracking-tighter mb-1">Tuition Fee</p>
+                           <p className="text-2xl font-['Baloo_2'] font-extrabold text-[#78350F]">KES {Number(course.price).toLocaleString()}</p>
+                         </div>
                        </div>
-
-                       <button 
-                         onClick={() => openRegistration(course)}
-                         className="flex-1 h-14 rounded-2xl bg-[#78350F] text-white flex items-center justify-center gap-2 hover:bg-amber-500 transition-all shadow-xl shadow-amber-900/20 active:scale-95 font-bold text-sm"
-                       >
-                         Enroll Now
-                         <ArrowRight size={18} />
-                       </button>
+                       <div className="flex flex-col sm:flex-row gap-2">
+                         {physical ? (
+                           <button
+                             type="button"
+                             onClick={() => openCohortJoin(course)}
+                             className="h-14 w-full rounded-2xl bg-emerald-800 text-white flex items-center justify-center gap-2 hover:bg-emerald-700 transition-all shadow-xl shadow-emerald-900/25 active:scale-95 font-bold text-sm"
+                           >
+                             <Users size={18} />
+                             Join cohort
+                             <ArrowRight size={18} />
+                           </button>
+                         ) : (
+                           <>
+                             <button
+                               type="button"
+                               onClick={() => openCurriculum(course.id)}
+                               className="h-12 flex-1 rounded-2xl border-2 border-[#78350F] text-[#78350F] font-bold text-sm flex items-center justify-center gap-2 hover:bg-amber-50 transition-all"
+                             >
+                               <Play size={18} />
+                               View lessons
+                             </button>
+                             <button
+                               type="button"
+                               onClick={() => openRegistration(course)}
+                               className="h-12 flex-1 rounded-2xl bg-[#78350F] text-white flex items-center justify-center gap-2 hover:bg-amber-500 transition-all shadow-xl shadow-amber-900/20 active:scale-95 font-bold text-sm"
+                             >
+                               Enroll now
+                               <ArrowRight size={18} />
+                             </button>
+                           </>
+                         )}
+                       </div>
                     </div>
                   </div>
                 </article>
@@ -249,11 +345,103 @@ export default function CoursesPage() {
          </div>
       </section>
 
-      <CourseRegistrationModal 
+      <CourseRegistrationModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         course={selectedCourse}
+        variant="enroll"
       />
+
+      <CourseRegistrationModal
+        isOpen={cohortModalOpen}
+        onClose={() => {
+          setCohortModalOpen(false);
+          setCohortCourse(null);
+        }}
+        course={cohortCourse}
+        variant="cohort"
+      />
+
+      {curriculumOpen && (
+        <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center p-0 sm:p-6">
+          <button
+            type="button"
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            aria-label="Close"
+            onClick={() => {
+              setCurriculumOpen(false);
+              setCurriculumDetail(null);
+            }}
+          />
+          <div className="relative z-10 w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl bg-white shadow-2xl border border-amber-100">
+            <div className="sticky top-0 flex items-start justify-between gap-4 border-b border-amber-100 bg-white/95 backdrop-blur px-6 py-4">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wider text-amber-600">Course curriculum</p>
+                <h2 className="text-2xl font-['Baloo_2'] font-bold text-[#78350F]">
+                  {curriculumDetail?.title || 'Loading…'}
+                </h2>
+              </div>
+              <button
+                type="button"
+                className="rounded-full p-2 text-amber-800 hover:bg-amber-50"
+                onClick={() => {
+                  setCurriculumOpen(false);
+                  setCurriculumDetail(null);
+                }}
+                aria-label="Close"
+              >
+                <X size={22} />
+              </button>
+            </div>
+            <div className="p-6 space-y-6">
+              {curriculumLoading && (
+                <div className="py-16 text-center text-amber-800 font-['Comic_Neue']">Loading lessons…</div>
+              )}
+              {!curriculumLoading && curriculumDetail?.promo_video_url && (
+                <div>
+                  <p className="text-sm font-bold text-amber-900 mb-2">Course intro</p>
+                  <video
+                    src={resolvePublicUploadUrl(curriculumDetail.promo_video_url)}
+                    className="w-full rounded-2xl border border-amber-100 bg-black"
+                    controls
+                  />
+                </div>
+              )}
+              {!curriculumLoading && curriculumDetail && (
+                <div>
+                  <p className="text-sm font-bold text-amber-900 mb-3">Lessons</p>
+                  {Array.isArray(curriculumDetail.lessons) && curriculumDetail.lessons.length > 0 ? (
+                    <ol className="space-y-6">
+                      {[...curriculumDetail.lessons]
+                        .sort((a: any, b: any) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+                        .map((lesson: any, idx: number) => (
+                          <li key={lesson.id || idx} className="rounded-2xl border border-amber-100 p-4 bg-amber-50/40">
+                            <p className="font-['Baloo_2'] font-bold text-lg text-[#78350F] mb-2">
+                              {idx + 1}. {lesson.title}
+                            </p>
+                            {lesson.video_url ? (
+                              <video
+                                src={resolvePublicUploadUrl(lesson.video_url)}
+                                className="w-full rounded-xl border border-amber-100 bg-black max-h-[240px]"
+                                controls
+                              />
+                            ) : (
+                              <p className="text-sm text-amber-800/70">Video coming soon.</p>
+                            )}
+                          </li>
+                        ))}
+                    </ol>
+                  ) : (
+                    <p className="text-amber-800/80 font-['Comic_Neue']">
+                      No published lessons yet. Your instructor will add videos here when the course is ready.
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       <style>{`
         @keyframes slideInUp {

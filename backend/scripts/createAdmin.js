@@ -3,9 +3,10 @@
 //   node scripts/createAdmin.js                            → uses defaults
 //   node scripts/createAdmin.js --name="Vickie" --email="vickie@johsther.com" --password="MyPass123"
 
+const path = require('path');
 const { Client } = require('pg');
 const bcrypt = require('bcrypt');
-require('dotenv').config();
+require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 
 // --- Parse CLI args --------------------------------------------------
 const args = process.argv.slice(2).reduce((acc, arg) => {
@@ -76,7 +77,7 @@ async function createAdmin() {
     console.log('  LOGIN CREDENTIALS');
     console.log('========================================');
     console.log(`  Email:    ${ADMIN_EMAIL}`);
-    console.log(`  Password: ${ADMIN_PASSWORD}`);
+    console.log('  Password: (hidden)');
     console.log('========================================\n');
 
   } catch (error) {

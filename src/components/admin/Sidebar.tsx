@@ -1,4 +1,4 @@
-import React from 'react';
+import type { LucideIcon } from 'lucide-react';
 
 import {
   LayoutDashboard,
@@ -21,6 +21,18 @@ import {
 } from 'lucide-react';
 import { cn } from "@/lib/utils";
 
+type NavItem = {
+  id: string;
+  label: string;
+  icon: LucideIcon;
+  badge?: number;
+};
+
+type NavSection = {
+  label?: string;
+  items: NavItem[];
+};
+
 interface SidebarProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
@@ -29,7 +41,7 @@ interface SidebarProps {
   setIsCollapsed: (collapsed: boolean) => void;
 }
 
-const navSections = [
+const navSections: NavSection[] = [
   {
     items: [
       { id: 'Overview', label: 'Overview', icon: LayoutDashboard },

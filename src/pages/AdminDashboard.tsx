@@ -38,14 +38,17 @@ export default function AdminDashboard() {
       case 'Inquiries':
       case 'Notifications':
         return <InquiryManager />;
+      case 'Courses':
+        return <AcademyManager section="courses" />;
+      case 'Batches':
+        return <AcademyManager section="batches" />;
       case 'Registrations':
+        return <RegistrationTracker variant="academy" />;
       case 'Orders':
-        return <RegistrationTracker />;
+        return <RegistrationTracker variant="orders" />;
       case 'Cakes':
       case 'Products':
         return <CakesManager />;
-      case 'Academy':
-        return <AcademyManager />;
       case 'Customers':
         return <CustomersManager />;
       case 'Refunds':

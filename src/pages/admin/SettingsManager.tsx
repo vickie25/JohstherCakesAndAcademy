@@ -189,7 +189,7 @@ export default function SettingsManager() {
                         <Input 
                           className="bg-[var(--color-bg-base)] border-[var(--color-border)] rounded-[var(--radius-sm)] font-medium h-11 focus:border-[var(--color-accent-primary)]" 
                           value={profile.email}
-                          placeholder="admin@josthercakes.com"
+                          placeholder="admin@johstercakesacadamy.co.ke"
                           onChange={e => setProfile({...profile, email: e.target.value})}
                         />
                       </div>

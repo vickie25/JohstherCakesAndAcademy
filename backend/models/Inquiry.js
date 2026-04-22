@@ -8,10 +8,14 @@ class Inquiry {
   }
 
   static async create(data) {
-    const { name, email, phone, type, message } = data;
+    const name = (data.name || '').trim();
+    const email = (data.email || '').trim();
+    const phone = data.phone != null && String(data.phone).trim() !== '' ? String(data.phone).trim() : null;
+    const type = (data.type || 'Website inquiry').toString().trim().slice(0, 120);
+    const message = (data.message || '').trim();
     const query = `
-      INSERT INTO inquiries (name, email, phone, type, message)
-      VALUES ($1, $2, $3, $4, $5)
+      INSERT INTO inquiries (name, email, phone, type, message, status)
+      VALUES ($1, $2, $3, $4, $5, 'New')
       RETURNING *
     `;
     const result = await db.query(query, [name, email, phone, type, message]);

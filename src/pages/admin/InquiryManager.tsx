@@ -59,11 +59,15 @@ export default function InquiryManager() {
 
   const selectedInquiry = inquiries.find(i => i.id === selectedId);
 
-  const filteredInquiries = inquiries.filter(i => {
-    const matchesSearch = i.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         i.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         i.type.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesTab = filterTab === 'all' || (i.status.toLowerCase() === 'new');
+  const filteredInquiries = inquiries.filter((i) => {
+    const q = searchQuery.toLowerCase();
+    const matchesSearch =
+      (i.name || '').toLowerCase().includes(q) ||
+      (i.email || '').toLowerCase().includes(q) ||
+      (i.type || '').toLowerCase().includes(q) ||
+      (i.message || '').toLowerCase().includes(q);
+    const st = (i.status || 'New').toLowerCase();
+    const matchesTab = filterTab === 'all' || st === 'new';
     return matchesSearch && matchesTab;
   });
 
@@ -128,7 +132,7 @@ export default function InquiryManager() {
                 )}
                >
                  Unread 
-                 {inquiries.filter(i => i.status.toLowerCase() === 'new').length > 0 && (
+                 {inquiries.filter((i) => (i.status || 'New').toLowerCase() === 'new').length > 0 && (
                    <span className="ml-2 w-2 h-2 rounded-full bg-[var(--color-accent-primary)] inline-block" />
                  )}
                </button>
@@ -154,7 +158,7 @@ export default function InquiryManager() {
                   >
                     <div className="flex items-start gap-4">
                       <div className="w-10 h-10 rounded-full bg-[var(--color-accent-primary)]/10 text-[var(--color-accent-primary)] flex items-center justify-center font-bold text-[14px] shrink-0">
-                        {inq.name.charAt(0)}
+                        {(inq.name || '?').charAt(0)}
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex justify-between items-baseline mb-1">
@@ -165,13 +169,17 @@ export default function InquiryManager() {
                         </div>
                         <p className={cn(
                           "text-[13px] line-clamp-1 mb-1",
-                          inq.status.toLowerCase() === 'new' ? "text-[var(--color-text-primary)] font-bold" : "text-[var(--color-text-secondary)] "
+                          (inq.status || 'New').toLowerCase() === 'new' ? "text-[var(--color-text-primary)] font-bold" : "text-[var(--color-text-secondary)] "
                         )}>
                           {inq.message}
                         </p>
                         <div className="flex items-center gap-2">
-                           <StatusBadge status={inq.type.toLowerCase() as any} label={inq.type.toUpperCase()} className="text-[9px] px-2 py-0 h-4" />
-                           {inq.status.toLowerCase() === 'new' && (
+                           <StatusBadge
+                             status="info"
+                             label={(inq.type || 'Inquiry').length > 28 ? `${(inq.type || 'Inquiry').slice(0, 26)}…` : (inq.type || 'Inquiry')}
+                             className="text-[9px] px-2 py-0 h-4 max-w-[140px] truncate"
+                           />
+                           {(inq.status || 'New').toLowerCase() === 'new' && (
                              <div className="w-2 h-2 rounded-full bg-[var(--color-accent-primary)]" />
                            )}
                         </div>
@@ -214,7 +222,7 @@ export default function InquiryManager() {
                   </div>
                 </div>
                 <div className="flex flex-col items-end gap-2">
-                   <StatusBadge status={selectedInquiry.status.toLowerCase() as any} />
+                   <StatusBadge status={(selectedInquiry.status || 'new').toLowerCase() === 'new' ? 'pending' : 'info'} label={(selectedInquiry.status || 'New').toUpperCase()} />
                    <span className="text-[11px] text-[var(--color-text-secondary)] font-medium uppercase tracking-wider">
                      Received {new Date(selectedInquiry.created_at).toLocaleString()}
                    </span>

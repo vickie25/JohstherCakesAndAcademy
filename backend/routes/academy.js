@@ -21,6 +21,23 @@ router.get('/batches', async (req, res) => {
   }
 });
 
+// @route   GET /api/academy/batches/:id/registrations
+// @desc    Students registered for this intake batch
+// @access  Private/Admin
+router.get('/batches/:id/registrations', [auth, isAdmin], async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (Number.isNaN(id)) {
+      return res.status(400).json({ success: false, message: 'Invalid batch id' });
+    }
+    const rows = await Registration.findByBatchId(id);
+    res.json({ success: true, count: rows.length, data: rows });
+  } catch (error) {
+    console.error('Error fetching batch registrations:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
 // @route   POST /api/academy/batches
 // @desc    Add new intake batch
 // @access  Private/Admin

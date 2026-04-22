@@ -14,7 +14,7 @@ export default function AcademyPage() {
     
     const fetchBatches = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/academy/batches');
+        const response = await fetch('http://localhost:5001/api/academy/batches');
         const data = await response.json();
         if (data.success) {
           setIntakes(data.data);
@@ -205,7 +205,8 @@ export default function AcademyPage() {
             <div className="space-y-6 mb-8 text-amber-900/80">
               <div>
                 <p className="font-bold text-lg mb-1">Main Academy</p>
-                <p>123 Bakers Street, Ngong Road area</p>
+                <p>Umoja One (Ngorano House)</p>
+                <p>Moi Drive</p>
                 <p>Nairobi, Kenya</p>
               </div>
               <div>

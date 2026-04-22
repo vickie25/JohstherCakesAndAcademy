@@ -171,7 +171,17 @@ export default function Footer() {
           gap: '12px',
         }}>
           <p style={{ fontFamily: "'Comic Neue', cursive", color: '#6B4C1E', fontSize: '0.82rem', margin: 0 }}>
-            © {year} Johsther Cakes & Academy. Made with love in Nairobi 🇰🇪
+            © {year} Johsther Cakes & Academy.{' '}
+            <a
+              href="https://cresdynamics.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: '#F59E0B', textDecoration: 'none', fontWeight: 700 }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.textDecoration = 'underline'; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.textDecoration = 'none'; }}
+            >
+              Built by Cres Dynamics
+            </a>
           </p>
           <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
             <button 

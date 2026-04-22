@@ -85,7 +85,7 @@ export default function AcademyRegistrationModal({ isOpen, onClose, item }: Moda
 
     setIsProcessing(true);
     try {
-      const response = await fetch('http://localhost:5000/api/academy/registrations', {
+      const response = await fetch('http://localhost:5001/api/academy/registrations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -261,7 +261,7 @@ export default function AcademyRegistrationModal({ isOpen, onClose, item }: Moda
                       </p>
                       <input 
                         type="tel" 
-                        placeholder="+254 700 000 000" 
+                        placeholder="0757 942121" 
                         className="w-full h-12 px-4 bg-white border-2 border-amber-200 rounded-xl font-medium"
                       />
                     </div>

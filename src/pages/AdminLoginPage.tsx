@@ -76,12 +76,12 @@ export default function AdminLoginPage() {
 
           <form onSubmit={handleLogin} className="space-y-5">
             <div className="space-y-1">
-              <label className="text-[13px] font-semibold text-[var(--color-text-primary)] block">Username</label>
+              <label className="text-[13px] font-semibold text-[var(--color-text-primary)] block">Email</label>
               <input 
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="Manager ID"
+                placeholder="admin@cresdynamics.com"
                 className="w-full h-[48px] px-4 bg-white border border-[var(--color-border)] rounded-[6px] outline-none focus:border-[var(--color-accent-primary)] focus:ring-[3px] focus:ring-[var(--color-accent-primary)]/15 transition-all text-[14px]"
                 required
               />

@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { X, Check, ShieldCheck, ArrowRight, User, Mail, Phone, Loader2, GraduationCap } from 'lucide-react';
+import { X, Check, ShieldCheck, ArrowRight, User, Mail, Phone, Loader2, GraduationCap, Users } from 'lucide-react';
+import { apiRequest } from '../lib/api';
 
-interface Course {
+export interface CourseRegistrationPayload {
   id: number;
   name?: string;
   title?: string;
@@ -9,7 +10,7 @@ interface Course {
   subtitle?: string;
   price: number;
   duration: string;
-  lessons: number;
+  lessons?: number;
   image?: string;
   image_url?: string;
   features: string[];
@@ -19,10 +20,12 @@ interface Course {
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
-  course: Course | null;
+  course: CourseRegistrationPayload | null;
+  /** Physical cohort: copy tuned for in-person intake; still posts to academy registrations. */
+  variant?: 'enroll' | 'cohort';
 }
 
-export default function CourseRegistrationModal({ isOpen, onClose, course }: ModalProps) {
+export default function CourseRegistrationModal({ isOpen, onClose, course, variant = 'enroll' }: ModalProps) {
   // ✅ All hooks declared at top level — no conditional hooks
   const [step, setStep] = useState<1 | 2>(1);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -32,11 +35,13 @@ export default function CourseRegistrationModal({ isOpen, onClose, course }: Mod
 
   const safeCourse = {
     id: course?.id,
-    name: course?.name || course?.title || 'Online Course',
+    name: course?.name || course?.title || 'Course',
     price: course?.price ?? 0,
     duration: course?.duration || 'Self-paced',
-    lessons: course?.lessons || 0,
+    lessons: course?.lessons ?? 0,
   };
+
+  const isCohort = variant === 'cohort';
 
   useEffect(() => {
     if (isOpen) {
@@ -68,9 +73,9 @@ export default function CourseRegistrationModal({ isOpen, onClose, course }: Mod
 
     setIsProcessing(true);
     try {
-      const response = await fetch('http://localhost:5000/api/academy/registrations', {
+      const { error } = await apiRequest<{ id: number }>('/academy/registrations', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        useAuth: false,
         body: JSON.stringify({
           student_name: formData.name,
           email: formData.email,
@@ -80,11 +85,10 @@ export default function CourseRegistrationModal({ isOpen, onClose, course }: Mod
         }),
       });
 
-      const data = await response.json();
-      if (data.success) {
+      if (!error) {
         setStep(2);
       } else {
-        alert(data.message || 'Enrollment failed. Please try again.');
+        alert(error || 'Enrollment failed. Please try again.');
       }
     } catch (error) {
       console.error('Enrollment error:', error);
@@ -131,18 +135,28 @@ export default function CourseRegistrationModal({ isOpen, onClose, course }: Mod
             {/* Header */}
             <div className={`p-8 md:p-12 pb-4 shrink-0 transition-all duration-700 ${getVisibility(1)}`}>
               <div className="flex items-center gap-3 text-amber-600 mb-2">
-                <ShieldCheck size={20} />
-                <span className="text-xs font-bold uppercase tracking-widest">Secure Course Enrollment</span>
+                {isCohort ? <Users size={20} /> : <ShieldCheck size={20} />}
+                <span className="text-xs font-bold uppercase tracking-widest">
+                  {isCohort ? 'Join the cohort' : 'Secure course enrollment'}
+                </span>
               </div>
-              <h2 className="text-3xl font-['Baloo_2'] font-bold text-amber-950">Your Details</h2>
-              <p className="text-sm text-amber-900/50 mt-1 font-medium">Fill in your info to reserve your spot.</p>
+              <h2 className="text-3xl font-['Baloo_2'] font-bold text-amber-950">Your details</h2>
+              <p className="text-sm text-amber-900/50 mt-1 font-medium">
+                {isCohort
+                  ? 'Tell us how to reach you. We will confirm your in-person intake.'
+                  : 'Fill in your info to reserve your spot.'}
+              </p>
 
               {/* Course summary pill */}
               <div className="mt-4 p-4 rounded-2xl bg-amber-50 border border-amber-100 flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-amber-900/50 uppercase font-bold tracking-tight">Enrolling in:</p>
+                  <p className="text-xs text-amber-900/50 uppercase font-bold tracking-tight">
+                    {isCohort ? 'Cohort' : 'Enrolling in'}
+                  </p>
                   <p className="font-['Baloo_2'] font-bold text-amber-900 line-clamp-1">{safeCourse.name}</p>
-                  <p className="text-xs text-amber-600 mt-1">{safeCourse.duration} · {safeCourse.lessons} Lessons</p>
+                  <p className="text-xs text-amber-600 mt-1">
+                    {isCohort ? `${safeCourse.duration} · in person` : `${safeCourse.duration} · ${safeCourse.lessons} lessons`}
+                  </p>
                 </div>
                 <div className="text-right ml-4">
                   <p className="text-xs text-amber-900/40 uppercase font-bold">Fee</p>
@@ -220,13 +234,13 @@ export default function CourseRegistrationModal({ isOpen, onClose, course }: Mod
                   </>
                 ) : (
                   <>
-                    Submit Enrollment
+                    {isCohort ? 'Submit application' : 'Submit enrollment'}
                     <ArrowRight size={20} />
                   </>
                 )}
               </button>
               <p className="text-center text-[10px] text-amber-900/40 mt-3 font-bold uppercase tracking-wider">
-                Our team will reach out within 24hrs to confirm
+                {isCohort ? 'We will contact you about class dates and payment' : 'Our team will reach out within 24hrs to confirm'}
               </p>
             </div>
           </>
@@ -241,10 +255,21 @@ export default function CourseRegistrationModal({ isOpen, onClose, course }: Mod
               </div>
 
               <div className="space-y-2">
-                <h2 className="text-4xl font-['Baloo_2'] font-extrabold text-amber-950">You're Enrolled!</h2>
+                <h2 className="text-4xl font-['Baloo_2'] font-extrabold text-amber-950">
+                  {isCohort ? "You're on the list!" : "You're enrolled!"}
+                </h2>
                 <p className="font-medium text-amber-900/60 px-6">
-                  Your spot in <span className="text-amber-600 font-bold">{safeCourse.name}</span> has been reserved.
-                  We'll reach out to confirm your enrollment.
+                  {isCohort ? (
+                    <>
+                      Thanks for applying to <span className="text-amber-600 font-bold">{safeCourse.name}</span>.
+                      {' '}We have received your details and will confirm your cohort placement soon.
+                    </>
+                  ) : (
+                    <>
+                      Your spot in <span className="text-amber-600 font-bold">{safeCourse.name}</span> has been reserved.
+                      {' '}We will reach out to confirm your enrollment.
+                    </>
+                  )}
                 </p>
               </div>
 

@@ -125,7 +125,8 @@ export default function AboutPage() {
                     </div>
                     <div>
                        <p className="font-bold text-amber-950 mb-1">Main Store & Academy</p>
-                       <p className="text-amber-900/60">123 Bakers' Lane, Ngong Road area</p>
+                       <p className="text-amber-900/60">Umoja One (Ngorano House)</p>
+                       <p className="text-amber-900/60">Moi Drive</p>
                        <p className="text-amber-900/60">Nairobi, Kenya</p>
                     </div>
                  </div>
@@ -136,8 +137,8 @@ export default function AboutPage() {
                     </div>
                     <div>
                        <p className="font-bold text-amber-950 mb-1">Call Our Bakeries</p>
-                       <p className="text-amber-900/60">+254 700 000 000</p>
-                       <p className="text-amber-900/60">+254 711 000 000</p>
+                       <p className="text-amber-900/60">0757 942121</p>
+                       <p className="text-amber-900/60">WhatsApp: 0757 942121</p>
                     </div>
                  </div>
 
@@ -147,7 +148,7 @@ export default function AboutPage() {
                     </div>
                     <div>
                        <p className="font-bold text-amber-950 mb-1">Email Us</p>
-                       <p className="text-amber-900/60">hello@josthercakes.com</p>
+                       <p className="text-amber-900/60">hello@johstercakesacadamy.co.ke</p>
                     </div>
                  </div>
               </div>

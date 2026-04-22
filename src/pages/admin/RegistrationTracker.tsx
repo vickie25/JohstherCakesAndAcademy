@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { 
   Users, Search, Filter, CheckCircle2, Clock, XCircle, CreditCard, 
   Mail, Phone, MoreVertical, Loader2, Calendar, AlertCircle,
@@ -25,11 +25,19 @@ interface Registration {
   created_at: string;
 }
 
-export default function RegistrationTracker() {
+type RegistrationTrackerVariant = 'academy' | 'orders';
+
+interface RegistrationTrackerProps {
+  /** Academy sidebar = course sign-ups across batches; Orders = same feed with store-oriented copy until a dedicated orders API exists. */
+  variant?: RegistrationTrackerVariant;
+}
+
+export default function RegistrationTracker({ variant = 'academy' }: RegistrationTrackerProps) {
   const [registrations, setRegistrations] = useState<Registration[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRows, setSelectedRows] = useState<number[]>([]);
+  const [courseFilter, setCourseFilter] = useState<string>('');
 
   const fetchRegistrations = async () => {
     try {
@@ -77,11 +85,27 @@ export default function RegistrationTracker() {
     }
   };
 
-  const filteredRegistrations = registrations.filter(r => 
-    r.student_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    r.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    r.course_name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const courseOptions = useMemo(() => {
+    const names = registrations.map((r) => r.course_name).filter(Boolean) as string[];
+    return Array.from(new Set(names)).sort((a, b) => a.localeCompare(b));
+  }, [registrations]);
+
+  const filteredRegistrations = registrations.filter((r) => {
+    const q = searchQuery.toLowerCase();
+    const matchesSearch =
+      r.student_name.toLowerCase().includes(q) ||
+      r.email.toLowerCase().includes(q) ||
+      (r.course_name || '').toLowerCase().includes(q) ||
+      (r.batch_name || '').toLowerCase().includes(q);
+    const matchesCourse = !courseFilter || r.course_name === courseFilter;
+    return matchesSearch && matchesCourse;
+  });
+
+  const pageTitle = variant === 'orders' ? 'Orders' : 'Academy · Registrations';
+  const pageSubtitle =
+    variant === 'orders'
+      ? 'Recent intake activity. Dedicated cake checkout orders will appear here when that API is connected.'
+      : 'Everyone who applied to join a course—see which course and batch each student chose.';
 
   const stats = [
     { label: 'Total Applications', value: registrations.length, icon: Users, tint: 'bg-[#E6F0FA] text-[#2A5A8A]' },
@@ -95,8 +119,8 @@ export default function RegistrationTracker() {
       {/* Header Area */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="font-display text-[34px] font-bold text-[var(--color-text-primary)]">Registrations</h1>
-          <p className="text-[14px] text-[var(--color-text-secondary)]">Monitor student applications, intake placements, and payment verification.</p>
+          <h1 className="font-display text-[34px] font-bold text-[var(--color-text-primary)]">{pageTitle}</h1>
+          <p className="text-[14px] text-[var(--color-text-secondary)]">{pageSubtitle}</p>
         </div>
         <div className="flex items-center gap-3">
           <Button variant="outline" className="border-[var(--color-border)] text-[var(--color-text-primary)] font-semibold text-[13px]">
@@ -146,10 +170,26 @@ export default function RegistrationTracker() {
           </div>
         )}
 
-        <div className="p-6 border-b border-[var(--color-border)] flex flex-row items-center justify-between">
-          <div className="flex items-center gap-4">
-            <h2 className="font-display text-[20px] font-bold text-[var(--color-text-primary)] whitespace-nowrap">Applications Queue</h2>
-            <div className="relative w-64 max-md:hidden">
+        <div className="p-6 border-b border-[var(--color-border)] flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:flex-wrap sm:gap-4">
+            <h2 className="font-display text-[20px] font-bold text-[var(--color-text-primary)] whitespace-nowrap">
+              {variant === 'orders' ? 'Activity queue' : 'All course applications'}
+            </h2>
+            {variant === 'academy' && courseOptions.length > 0 && (
+              <select
+                value={courseFilter}
+                onChange={(e) => setCourseFilter(e.target.value)}
+                className="h-[36px] min-w-[160px] rounded-full border border-[var(--color-border)] bg-[var(--color-bg-muted)] px-4 text-[13px] font-medium text-[var(--color-text-primary)] outline-none focus:border-[var(--color-accent-primary)]"
+              >
+                <option value="">All courses</option>
+                {courseOptions.map((name) => (
+                  <option key={name} value={name}>
+                    {name}
+                  </option>
+                ))}
+              </select>
+            )}
+            <div className="relative w-full max-w-xs sm:w-64">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-secondary)]" size={16} />
               <Input
                 type="text"

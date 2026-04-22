@@ -1,12 +1,26 @@
+const path = require('path');
 const { Pool } = require('pg');
-require('dotenv').config();
+require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
+
+const dbUser = process.env.DB_USER || 'postgres';
+const dbHost = process.env.DB_HOST || 'localhost';
+const dbName = process.env.DB_NAME || 'johsther_cakes_academy';
+const dbPassword = process.env.DB_PASSWORD ?? '';
+const dbPort = Number.parseInt(String(process.env.DB_PORT || '5432'), 10) || 5432;
+
+if (process.env.DB_PASSWORD === undefined && process.env.NODE_ENV !== 'production') {
+  console.warn(
+    '⚠️  DB_PASSWORD is not set. Using empty password (common for local Postgres). ' +
+      'If connection fails, copy `backend/.env.example` to `backend/.env` and set DB_* values.'
+  );
+}
 
 const pool = new Pool({
-  user: process.env.DB_USER,
-  host: process.env.DB_HOST,
-  database: process.env.DB_NAME,
-  password: process.env.DB_PASSWORD,
-  port: process.env.DB_PORT,
+  user: dbUser,
+  host: dbHost,
+  database: dbName,
+  password: dbPassword,
+  port: dbPort,
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
   max: 20,
   idleTimeoutMillis: 30000,
